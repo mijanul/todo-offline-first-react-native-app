@@ -5,11 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Alert,
   Platform,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { Button } from '../../components/atoms/Button';
@@ -19,18 +17,12 @@ import { toggleTheme } from '../../store/slices/themeSlice';
 import { clearAuth } from '../../store/slices/authSlice';
 import { firebaseService } from '../../services/firebase/firebaseService';
 import LinearGradient from 'react-native-linear-gradient';
-import type { RootState } from '../../store';
-
-const { width } = Dimensions.get('window');
 
 export const SettingsScreen: React.FC = () => {
   const { theme, isDark } = useTheme();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: any) => state.auth.user);
   const themeMode = useAppSelector((state: any) => state.theme.mode);
-  const isConnected = useAppSelector(
-    (state: RootState) => state.network.isConnected,
-  );
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isDarkMode = themeMode === 'dark';
@@ -40,15 +32,6 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
-    if (!isConnected) {
-      Alert.alert(
-        'No Internet Connection',
-        'Please check your internet connection to logout.',
-        [{ text: 'OK' }],
-      );
-      return;
-    }
-
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -79,9 +62,7 @@ export const SettingsScreen: React.FC = () => {
 
   return (
     <ThemedStatusBar>
-      <View
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
+      <View style={styles.container}>
         {/* Gradient Header */}
         <LinearGradient
           colors={
@@ -102,14 +83,7 @@ export const SettingsScreen: React.FC = () => {
           <View
             style={[
               styles.profileCard,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(255, 255, 255, 0.95)',
-                borderColor: isDark
-                  ? 'rgba(255, 255, 255, 0.2)'
-                  : 'rgba(255, 255, 255, 0.5)',
-              },
+              isDark ? styles.profileCardDark : styles.profileCardLight,
             ]}
           >
             <View style={styles.avatarLarge}>
@@ -126,7 +100,7 @@ export const SettingsScreen: React.FC = () => {
               <Text
                 style={[
                   styles.userNameLarge,
-                  { color: isDark ? '#FFFFFF' : theme.colors.text },
+                  isDark ? styles.textWhite : styles.textThemed,
                 ]}
               >
                 {user?.displayName || 'User'}
@@ -134,11 +108,9 @@ export const SettingsScreen: React.FC = () => {
               <Text
                 style={[
                   styles.userEmailLarge,
-                  {
-                    color: isDark
-                      ? 'rgba(255, 255, 255, 0.7)'
-                      : theme.colors.textSecondary,
-                  },
+                  isDark
+                    ? styles.textWhiteSecondary
+                    : styles.textSecondaryThemed,
                 ]}
               >
                 {user?.email || 'No email'}
@@ -154,56 +126,25 @@ export const SettingsScreen: React.FC = () => {
         >
           {/* Appearance Section */}
           <View style={styles.sectionContainer}>
-            <Text
-              style={[
-                styles.sectionTitle,
-                { color: theme.colors.textSecondary },
-              ]}
-            >
-              APPEARANCE
-            </Text>
+            <Text style={styles.sectionTitle}>APPEARANCE</Text>
             <View
-              style={[
-                styles.card,
-                {
-                  backgroundColor: isDark
-                    ? 'rgba(28, 28, 30, 0.8)'
-                    : 'rgba(255, 255, 255, 0.9)',
-                  borderColor: isDark
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : 'rgba(0, 0, 0, 0.05)',
-                },
-              ]}
+              style={[styles.card, isDark ? styles.cardDark : styles.cardLight]}
             >
               <View style={styles.settingRow}>
                 <View style={styles.settingLeft}>
                   <View
                     style={[
                       styles.iconContainer,
-                      {
-                        backgroundColor: isDark
-                          ? 'rgba(10, 132, 255, 0.2)'
-                          : 'rgba(0, 122, 255, 0.1)',
-                      },
+                      isDark
+                        ? styles.iconContainerDark
+                        : styles.iconContainerLight,
                     ]}
                   >
                     {isDarkMode ? <MoonIcon /> : <SunIcon />}
                   </View>
                   <View style={styles.settingInfo}>
-                    <Text
-                      style={[
-                        styles.settingLabel,
-                        { color: theme.colors.text },
-                      ]}
-                    >
-                      Dark Mode
-                    </Text>
-                    <Text
-                      style={[
-                        styles.settingDescription,
-                        { color: theme.colors.textSecondary },
-                      ]}
-                    >
+                    <Text style={styles.settingLabel}>Dark Mode</Text>
+                    <Text style={styles.settingDescription}>
                       {isDarkMode
                         ? 'Dark theme enabled'
                         : 'Light theme enabled'}
@@ -221,14 +162,7 @@ export const SettingsScreen: React.FC = () => {
 
           {/* Account Section */}
           <View style={styles.sectionContainer}>
-            <Text
-              style={[
-                styles.sectionTitle,
-                { color: theme.colors.textSecondary },
-              ]}
-            >
-              ACCOUNT
-            </Text>
+            <Text style={styles.sectionTitle}>ACCOUNT</Text>
             <Button
               title={isLoggingOut ? 'Logging out...' : 'Logout'}
               onPress={handleLogout}
@@ -238,15 +172,7 @@ export const SettingsScreen: React.FC = () => {
                 isDark ? ['#FF453A', '#FF6961'] : ['#FF3B30', '#FF2D55']
               }
               icon={<LogoutIcon color="#FFFFFF" />}
-              disabled={!isConnected || isLoggingOut}
             />
-            {!isConnected && (
-              <Text
-                style={[styles.offlineWarning, { color: theme.colors.error }]}
-              >
-                Logout requires internet connection
-              </Text>
-            )}
           </View>
 
           {/* App Info */}
@@ -254,27 +180,11 @@ export const SettingsScreen: React.FC = () => {
             <View
               style={[
                 styles.appInfoCard,
-                {
-                  backgroundColor: isDark
-                    ? 'rgba(28, 28, 30, 0.5)'
-                    : 'rgba(255, 255, 255, 0.5)',
-                },
+                isDark ? styles.appInfoCardDark : styles.appInfoCardLight,
               ]}
             >
-              <Text
-                style={[
-                  styles.appInfoText,
-                  { color: theme.colors.textSecondary },
-                ]}
-              >
-                Todo App v1.0.0
-              </Text>
-              <Text
-                style={[
-                  styles.appInfoSubtext,
-                  { color: theme.colors.textTertiary },
-                ]}
-              >
+              <Text style={styles.appInfoText}>Todo App v1.0.0</Text>
+              <Text style={styles.appInfoSubtext}>
                 Offline-First Task Manager
               </Text>
             </View>
@@ -322,20 +232,10 @@ const AnimatedSwitch: React.FC<{
   return (
     <TouchableOpacity onPress={onValueChange} activeOpacity={0.8}>
       <Animated.View
-        style={[
-          styles.switchContainer,
-          {
-            backgroundColor: bgColor,
-          },
-        ]}
+        style={[styles.switchContainer, { backgroundColor: bgColor }]}
       >
         <Animated.View
-          style={[
-            styles.switchThumb,
-            {
-              transform: [{ translateX }],
-            },
-          ]}
+          style={[styles.switchThumb, { transform: [{ translateX }] }]}
         />
       </Animated.View>
     </TouchableOpacity>
@@ -344,111 +244,32 @@ const AnimatedSwitch: React.FC<{
 
 // Modern Icons
 const SunIcon = () => (
-  <View
-    style={{
-      width: 20,
-      height: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}
-  >
-    <View
-      style={{
-        width: 12,
-        height: 12,
-        borderRadius: 6,
-        backgroundColor: '#FF9500',
-      }}
-    />
+  <View style={styles.iconWrapper}>
+    <View style={styles.sunCore} />
     {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, index) => (
       <View
         key={index}
-        style={{
-          position: 'absolute',
-          width: 2,
-          height: 6,
-          backgroundColor: '#FF9500',
-          borderRadius: 1,
-          transform: [{ rotate: `${angle}deg` }, { translateY: -9 }],
-        }}
+        style={[
+          styles.sunRay,
+          { transform: [{ rotate: `${angle}deg` }, { translateY: -9 }] },
+        ]}
       />
     ))}
   </View>
 );
 
 const MoonIcon = () => (
-  <View
-    style={{
-      width: 20,
-      height: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}
-  >
-    <View
-      style={{
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: '#0A84FF',
-      }}
-    />
-    <View
-      style={{
-        position: 'absolute',
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        left: 6,
-        top: 2,
-      }}
-    />
+  <View style={styles.iconWrapper}>
+    <View style={styles.moonBase} />
+    <View style={styles.moonOverlay} />
   </View>
 );
 
 const LogoutIcon: React.FC<{ color: string }> = ({ color }) => (
-  <View
-    style={{
-      width: 20,
-      height: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}
-  >
-    <View
-      style={{
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        borderWidth: 2,
-        borderColor: color,
-        borderRightWidth: 0,
-        transform: [{ translateX: -2 }],
-      }}
-    />
-    <View
-      style={{
-        position: 'absolute',
-        width: 10,
-        height: 2,
-        backgroundColor: color,
-        right: 2,
-      }}
-    />
-    <View
-      style={{
-        position: 'absolute',
-        width: 5,
-        height: 5,
-        borderTopWidth: 2,
-        borderRightWidth: 2,
-        borderColor: color,
-        transform: [{ rotate: '45deg' }],
-        right: 1,
-        top: 7.5,
-      }}
-    />
+  <View style={styles.iconWrapper}>
+    <View style={[styles.logoutCircle, { borderColor: color }]} />
+    <View style={[styles.logoutArrowLine, { backgroundColor: color }]} />
+    <View style={[styles.logoutArrowHead, { borderColor: color }]} />
   </View>
 );
 
@@ -488,6 +309,14 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
+  profileCardDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  profileCardLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
   avatarLarge: {
     width: 80,
     height: 80,
@@ -514,9 +343,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 4,
   },
+  textWhite: {
+    color: '#FFFFFF',
+  },
+  textThemed: {
+    color: '#000000',
+  },
   userEmailLarge: {
     fontSize: 15,
     fontWeight: '500',
+  },
+  textWhiteSecondary: {
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  textSecondaryThemed: {
+    color: '#666666',
   },
   scrollView: {
     flex: 1,
@@ -546,7 +387,14 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-
+  cardDark: {
+    backgroundColor: 'rgba(28, 28, 30, 0.8)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cardLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+  },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -564,6 +412,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+  },
+  iconContainerDark: {
+    backgroundColor: 'rgba(10, 132, 255, 0.2)',
+  },
+  iconContainerLight: {
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
   },
   settingInfo: {
     flex: 1,
@@ -611,6 +465,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
   },
+  appInfoCardDark: {
+    backgroundColor: 'rgba(28, 28, 30, 0.5)',
+  },
+  appInfoCardLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
   appInfoText: {
     fontSize: 14,
     fontWeight: '600',
@@ -620,10 +480,63 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
-  offlineWarning: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 8,
-    textAlign: 'center',
+  // Icon styles
+  iconWrapper: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sunCore: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FF9500',
+  },
+  sunRay: {
+    position: 'absolute',
+    width: 2,
+    height: 6,
+    backgroundColor: '#FF9500',
+    borderRadius: 1,
+  },
+  moonBase: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#0A84FF',
+  },
+  moonOverlay: {
+    position: 'absolute',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    left: 6,
+    top: 2,
+  },
+  logoutCircle: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderRightWidth: 0,
+    transform: [{ translateX: -2 }],
+  },
+  logoutArrowLine: {
+    position: 'absolute',
+    width: 10,
+    height: 2,
+    right: 2,
+  },
+  logoutArrowHead: {
+    position: 'absolute',
+    width: 5,
+    height: 5,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    transform: [{ rotate: '45deg' }],
+    right: 1,
+    top: 7.5,
   },
 });
