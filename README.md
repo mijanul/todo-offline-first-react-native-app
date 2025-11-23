@@ -425,6 +425,90 @@ FIREBASE_PROJECT_ID=
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## ⚠️ Known Limitations
+
+There are some bugs to be fixed in future releases:
+
+1. **Notification Persistence After Logout** - Scheduled notifications continue to trigger even after user logout
+2. **UI Sync Delay** - Task list page requires manual pull-to-refresh to update UI even when all tasks are synced
+3. **Offline Button States** - Some buttons remain enabled while offline and should be disabled
+4. **Fixed Font & Styles** - Font sizes and styles are not responsive to different screen sizes
+5. **Minor Bugs** - Various other minor bugs and edge cases to be addressed
+
+## 📚 Additional Information
+
+### ■ Architecture Choice
+
+This project follows an **offline-first architecture** with the following design decisions:
+
+- **Local-first approach**: Realm database as the primary data source
+- **Feature-based folder structure**: Organized by features (auth, tasks, settings, notifications)
+- **Atomic design pattern**: Components organized as atoms, molecules, and organisms
+- **Separation of concerns**: Clear separation between UI, business logic, and data layers
+- **Service layer pattern**: Dedicated services for Firebase, database, sync, and notifications
+
+See the [Project Structure](#project-structure) section for detailed folder organization.
+
+### ■ Libraries Used
+
+**Core Technologies:**
+
+- React Native 0.82.1
+- TypeScript
+- Redux Toolkit (State Management)
+- React Navigation 7.x (Navigation)
+
+**Database & Backend:**
+
+- Realm (Local Database)
+- Firebase Authentication
+- Firebase Firestore
+- Firebase Cloud Messaging
+
+**UI & Styling:**
+
+- React Native Linear Gradient
+- Custom theme system with light/dark mode
+
+**Notifications:**
+
+- Notifee (Local notifications)
+- @react-native-firebase/messaging (Remote notifications)
+
+**Utilities:**
+
+- @react-native-community/netinfo (Network monitoring)
+- react-native-config (Environment configuration)
+
+See the [Tech Stack](#tech-stack) section for complete details.
+
+### ■ How to Run the App in Each Environment
+
+**Development Environment:**
+
+```bash
+npm run android:dev  # Android
+npm run ios:dev      # iOS
+```
+
+**Staging Environment:**
+
+```bash
+npm run android:staging  # Android
+npm run ios:staging      # iOS
+```
+
+**Production Environment:**
+
+```bash
+npm run android:prod  # Android
+npm run ios:prod      # iOS
+```
+
+Each environment uses its corresponding `.env` file (`.env.development`, `.env.staging`, `.env.production`).
+
+See the [Running the App](#running-the-app) section for detailed setup instructions.
+
 ## License
 
 This project is private and not licensed for public use.
