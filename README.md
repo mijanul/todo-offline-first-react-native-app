@@ -169,9 +169,7 @@ cd ..
 
 The generated APK will be available at:
 
-```
-android/app/build/outputs/apk/release/app-release.apk
-```
+[`android/app/build/outputs/apk/release/app-release.apk`](android/app/build/outputs/apk/release/app-release.apk)
 
 You can install it directly on your Android device or distribute it for testing.
 
