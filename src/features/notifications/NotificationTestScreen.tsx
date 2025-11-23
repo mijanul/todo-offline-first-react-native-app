@@ -43,7 +43,6 @@ export const NotificationTestScreen: React.FC = () => {
   const copyToClipboard = () => {
     if (fcmToken) {
       Clipboard.setString(fcmToken);
-      Alert.alert('Copied', 'FCM Token copied to clipboard');
     }
   };
 

@@ -143,8 +143,24 @@ export const SettingsScreen: React.FC = () => {
                     {isDarkMode ? <MoonIcon /> : <SunIcon />}
                   </View>
                   <View style={styles.settingInfo}>
-                    <Text style={styles.settingLabel}>Dark Mode</Text>
-                    <Text style={styles.settingDescription}>
+                    <Text
+                      style={[
+                        styles.settingLabel,
+                        isDark
+                          ? styles.settingLabelDark
+                          : styles.settingLabelLight,
+                      ]}
+                    >
+                      Dark Mode
+                    </Text>
+                    <Text
+                      style={[
+                        styles.settingDescription,
+                        isDark
+                          ? styles.settingDescriptionDark
+                          : styles.settingDescriptionLight,
+                      ]}
+                    >
                       {isDarkMode
                         ? 'Dark theme enabled'
                         : 'Light theme enabled'}
@@ -427,9 +443,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 3,
   },
+  settingLabelDark: {
+    color: '#FFFFFF',
+  },
+  settingLabelLight: {
+    color: '#000000',
+  },
   settingDescription: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  settingDescriptionDark: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  settingDescriptionLight: {
+    color: '#666666',
   },
   arrowIcon: {
     width: 32,
