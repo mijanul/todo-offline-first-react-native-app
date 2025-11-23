@@ -14,6 +14,7 @@ import { ThemeProvider } from './src/theme/ThemeContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { realmService } from './src/services/database/realmService';
 import { notificationService } from './src/services/notifications/notificationService';
+import { syncService } from './src/services/sync/syncService';
 import ThemedStatusBar from './src/components/ThemedStatusBar';
 
 function App(): React.JSX.Element {
@@ -26,6 +27,10 @@ function App(): React.JSX.Element {
         console.log('✅ Realm initialized');
         await notificationService.initialize();
         console.log('✅ Notification service initialized');
+
+        // Initialize sync service
+        syncService.initialize();
+        console.log('✅ Sync service initialized');
 
         // Reschedule notifications for tasks with future reminders
         const allTasks = await realmService.getAllTasks('');
@@ -54,6 +59,7 @@ function App(): React.JSX.Element {
 
     return () => {
       realmService.close();
+      syncService.cleanup();
     };
   }, []);
 

@@ -40,10 +40,10 @@ export const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           if (!user) return;
           setLoading(true);
           try {
-            await realmService.deleteTask(taskId);
+            await realmService.deleteTask(taskId, user.uid);
             await notificationService.cancelNotification(taskId);
             dispatch(removeTask(taskId));
-            syncService.syncTasks(user.uid);
+            syncService.syncLocalToRemote();
             navigation.goBack();
           } catch {
             Alert.alert('Error', 'Failed to delete task');

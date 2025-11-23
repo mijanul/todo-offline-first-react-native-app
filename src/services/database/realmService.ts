@@ -20,11 +20,12 @@ class RealmService {
     return Array.from(tasks).map(this.taskSchemaToTask);
   }
 
-  async getTaskById(id: string): Promise<Task | null> {
+  async getTaskById(id: string, userId: string): Promise<Task | null> {
     await this.init();
     const task = this.realm!.objects<TaskSchema>('Task').filtered(
-      'id == $0',
+      'id == $0 AND userId == $1',
       id,
+      userId,
     )[0];
     return task ? this.taskSchemaToTask(task) : null;
   }
@@ -47,14 +48,19 @@ class RealmService {
       });
     });
 
-    return (await this.getTaskById(id))!;
+    return (await this.getTaskById(id, task.userId))!;
   }
 
-  async updateTask(id: string, updates: Partial<Task>): Promise<Task | null> {
+  async updateTask(
+    id: string,
+    userId: string,
+    updates: Partial<Task>,
+  ): Promise<Task | null> {
     await this.init();
     const task = this.realm!.objects<TaskSchema>('Task').filtered(
-      'id == $0',
+      'id == $0 AND userId == $1',
       id,
+      userId,
     )[0];
 
     if (!task) {
@@ -72,11 +78,12 @@ class RealmService {
     return this.taskSchemaToTask(task);
   }
 
-  async deleteTask(id: string): Promise<boolean> {
+  async deleteTask(id: string, userId: string): Promise<boolean> {
     await this.init();
     const task = this.realm!.objects<TaskSchema>('Task').filtered(
-      'id == $0',
+      'id == $0 AND userId == $1',
       id,
+      userId,
     )[0];
 
     if (!task) {
@@ -133,6 +140,49 @@ class RealmService {
       dueDate: taskSchema.dueDate,
       reminderTime: taskSchema.reminderTime,
       synced: taskSchema.synced,
+    };
+  }
+
+  async saveRemoteTask(task: Task): Promise<void> {
+    await this.init();
+    const existingTask = this.realm!.objects<TaskSchema>('Task').filtered(
+      'id == $0 AND userId == $1',
+      task.id,
+      task.userId,
+    )[0];
+
+    this.realm!.write(() => {
+      if (existingTask) {
+        existingTask.title = task.title;
+        existingTask.description = task.description;
+        existingTask.completed = task.completed;
+        existingTask.createdAt = task.createdAt;
+        existingTask.updatedAt = task.updatedAt;
+        existingTask.dueDate = task.dueDate;
+        existingTask.reminderTime = task.reminderTime;
+        existingTask.synced = true;
+      } else {
+        this.realm!.create('Task', {
+          _id: new BSON.ObjectId(),
+          ...task,
+          synced: true,
+        });
+      }
+    });
+  }
+
+  async addChangeListener(callback: () => void): Promise<() => void> {
+    await this.init();
+    const tasks = this.realm!.objects<TaskSchema>('Task');
+
+    const listener = () => {
+      callback();
+    };
+
+    tasks.addListener(listener);
+
+    return () => {
+      tasks.removeListener(listener);
     };
   }
 

@@ -14,7 +14,11 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import type { RootState } from '../../store';
 import { TaskItem } from '../../components/molecules/TaskItem';
 import { Button } from '../../components/atoms/Button';
-import { setTasks, toggleTaskComplete } from '../../store/slices/tasksSlice';
+import {
+  setTasks,
+  toggleTaskComplete,
+  setFilter,
+} from '../../store/slices/tasksSlice';
 import { realmService } from '../../services/database/realmService';
 import { syncService } from '../../services/sync/syncService';
 import type { AppStackParamList, Task } from '../../types';
@@ -39,18 +43,13 @@ export const TaskListScreen: React.FC<Props> = ({ navigation }) => {
   }, [loadTasks]);
 
   useEffect(() => {
-    if (user) {
-      syncService.startAutoSync(user.uid);
-    }
-    return () => {
-      syncService.stopAutoSync();
-    };
-  }, [user]);
+    loadTasks();
+  }, [loadTasks]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     if (user) {
-      await syncService.syncTasks(user.uid);
+      await syncService.syncLocalToRemote();
       await loadTasks();
     }
     setRefreshing(false);
@@ -59,9 +58,11 @@ export const TaskListScreen: React.FC<Props> = ({ navigation }) => {
   const handleToggleComplete = async (taskId: string) => {
     const task = tasks.find((t: Task) => t.id === taskId);
     if (task && user) {
-      await realmService.updateTask(taskId, { completed: !task.completed });
+      await realmService.updateTask(taskId, user.uid, {
+        completed: !task.completed,
+      });
       dispatch(toggleTaskComplete(taskId));
-      syncService.syncTasks(user.uid);
+      syncService.syncLocalToRemote();
     }
   };
 
@@ -107,7 +108,7 @@ export const TaskListScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
           <View style={styles.filterContainer}>
-            {(['all', 'active', 'completed'] as const).map(f => (
+            {(['active', 'completed', 'all'] as const).map(f => (
               <TouchableOpacity
                 key={f}
                 style={[
@@ -116,9 +117,7 @@ export const TaskListScreen: React.FC<Props> = ({ navigation }) => {
                     backgroundColor: theme.colors.primary,
                   },
                 ]}
-                onPress={() =>
-                  dispatch({ type: 'tasks/setFilter', payload: f })
-                }
+                onPress={() => dispatch(setFilter(f))}
               >
                 <Text
                   style={[

@@ -5,7 +5,7 @@ const initialState: TasksState = {
   tasks: [],
   isLoading: false,
   error: null,
-  filter: 'all',
+  filter: 'active',
 };
 
 const tasksSlice = createSlice({

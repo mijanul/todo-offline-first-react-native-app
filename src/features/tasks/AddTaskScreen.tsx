@@ -78,7 +78,7 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
       );
 
       dispatch(addTask(newTask));
-      syncService.syncTasks(user.uid);
+      syncService.syncLocalToRemote();
       navigation.goBack();
     } catch (error: any) {
       Alert.alert('Error', 'Failed to create task');

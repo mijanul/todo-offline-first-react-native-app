@@ -37,25 +37,35 @@ class FirebaseService {
     const userId = this.getCurrentUser()?.uid;
     if (!userId) throw new Error('User not authenticated');
 
+    const taskData = {
+      title: task.title,
+      description: task.description || null,
+      completed: task.completed,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+      dueDate: task.dueDate || null,
+      reminderTime: task.reminderTime || null,
+    };
+
+    console.log('🔄 Syncing task to Firestore:');
+    console.log('  User ID:', userId);
+    console.log('  Task ID:', task.id);
+    console.log('  Task Data:', JSON.stringify(taskData, null, 2));
+
     await firestore()
       .collection('users')
       .doc(userId)
       .collection('tasks')
       .doc(task.id)
-      .set({
-        title: task.title,
-        description: task.description || null,
-        completed: task.completed,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-        dueDate: task.dueDate || null,
-        reminderTime: task.reminderTime || null,
-      });
+      .set(taskData);
+
+    console.log('✅ Task synced successfully to Firestore!');
   }
 
   async fetchTasksFromFirestore(): Promise<Task[]> {
     const userId = this.getCurrentUser()?.uid;
     if (!userId) throw new Error('User not authenticated');
+    console.log('Fetching tasks for user:', userId);
 
     const snapshot = await firestore()
       .collection('users')
@@ -77,6 +87,10 @@ class FirebaseService {
   async deleteTaskFromFirestore(taskId: string): Promise<void> {
     const userId = this.getCurrentUser()?.uid;
     if (!userId) throw new Error('User not authenticated');
+    
+    console.log('🗑️ Deleting task from Firestore:');
+    console.log('  User ID:', userId);
+    console.log('  Task ID:', taskId);
 
     await firestore()
       .collection('users')
@@ -84,6 +98,8 @@ class FirebaseService {
       .collection('tasks')
       .doc(taskId)
       .delete();
+      
+    console.log('✅ Task deleted from Firestore successfully!');
   }
 
   listenToTasks(
@@ -95,6 +111,7 @@ class FirebaseService {
       onError(new Error('User not authenticated'));
       return () => {};
     }
+    console.log('Listening to tasks for user:', userId);
 
     return firestore()
       .collection('users')

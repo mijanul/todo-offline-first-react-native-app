@@ -17,6 +17,7 @@ interface DateTimePickerProps {
   mode?: 'date' | 'time' | 'datetime';
   minimumDate?: Date;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({
@@ -27,6 +28,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   mode = 'datetime',
   minimumDate = new Date(),
   required = false,
+  disabled = false,
 }) => {
   const { theme } = useTheme();
   const [show, setShow] = useState(false);
@@ -110,11 +112,15 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
           style={[
             styles.input,
             {
-              backgroundColor: theme.colors.card,
+              backgroundColor: disabled
+                ? theme.colors.background
+                : theme.colors.card,
               borderColor: error ? theme.colors.error : theme.colors.border,
+              opacity: disabled ? 0.7 : 1,
             },
           ]}
-          onPress={() => setShow(true)}
+          onPress={() => !disabled && setShow(true)}
+          activeOpacity={disabled ? 1 : 0.7}
         >
           <Text
             style={[
@@ -127,7 +133,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
             {formatDateTime(value)}
           </Text>
         </TouchableOpacity>
-        {value && !required && (
+        {value && !required && !disabled && (
           <TouchableOpacity
             style={[
               styles.clearButton,

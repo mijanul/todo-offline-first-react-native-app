@@ -1,129 +1,145 @@
-import NetInfo from '@react-native-community/netinfo';
-import type { NetInfoState } from '@react-native-community/netinfo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { realmService } from '../database/realmService';
 import { firebaseService } from '../firebase/firebaseService';
-
-const LAST_SYNC_KEY = '@last_sync_time';
+import { Task } from '../../types';
 
 class SyncService {
-  private isSyncing = false;
-  private syncInterval: ReturnType<typeof setInterval> | null = null;
+  private isConnected: boolean = false;
+  private unsubscribeNetInfo: (() => void) | null = null;
+  private unsubscribeFirestore: (() => void) | null = null;
+  private isSyncing: boolean = false;
 
-  async startAutoSync(userId: string): Promise<void> {
-    // Sync every 5 minutes
-    this.syncInterval = setInterval(() => {
-      this.syncTasks(userId);
-    }, 5 * 60 * 1000);
+  private unsubscribeAuth: (() => void) | null = null;
+  private unsubscribeRealm: (() => void) | null = null;
 
-    // Also sync on network state change
-    NetInfo.addEventListener((state: NetInfoState) => {
-      if (state.isConnected && state.isInternetReachable) {
-        this.syncTasks(userId);
+  constructor() {}
+
+  async initialize() {
+    this.unsubscribeNetInfo = NetInfo.addEventListener(
+      (state: NetInfoState) => {
+        this.isConnected = state.isConnected ?? false;
+        if (this.isConnected) {
+          this.syncLocalToRemote();
+        }
+      },
+    );
+
+    this.unsubscribeAuth = firebaseService.onAuthStateChanged(user => {
+      if (user) {
+        this.startSync();
+      } else {
+        this.stopSync();
       }
     });
 
+    this.unsubscribeRealm = await realmService.addChangeListener(() => {
+      if (this.isConnected) {
+        this.syncLocalToRemote();
+      }
+    });
+  }
+
+  async startSync() {
+    const user = firebaseService.getCurrentUser();
+    if (!user) return;
+
     // Initial sync
-    await this.syncTasks(userId);
-  }
+    await this.syncLocalToRemote();
 
-  stopAutoSync(): void {
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
-      this.syncInterval = null;
+    // Listen for remote changes
+    if (!this.unsubscribeFirestore) {
+      this.unsubscribeFirestore = firebaseService.listenToTasks(
+        tasks => {
+          this.handleRemoteTasksUpdate(tasks);
+        },
+        error => {
+          console.error('Firestore sync error:', error);
+        },
+      );
     }
   }
 
-  async syncTasks(userId: string): Promise<void> {
-    if (this.isSyncing) return;
-
-    const netInfo = await NetInfo.fetch();
-    if (!netInfo.isConnected || !netInfo.isInternetReachable) {
-      console.log('No internet connection, skipping sync');
-      return;
+  stopSync() {
+    if (this.unsubscribeFirestore) {
+      this.unsubscribeFirestore();
+      this.unsubscribeFirestore = null;
     }
+  }
 
-    this.isSyncing = true;
+  cleanup() {
+    this.stopSync();
+    if (this.unsubscribeNetInfo) {
+      this.unsubscribeNetInfo();
+      this.unsubscribeNetInfo = null;
+    }
+    if (this.unsubscribeAuth) {
+      this.unsubscribeAuth();
+      this.unsubscribeAuth = null;
+    }
+    if (this.unsubscribeRealm) {
+      this.unsubscribeRealm();
+      this.unsubscribeRealm = null;
+    }
+  }
+
+  async syncLocalToRemote() {
+    if (!this.isConnected || this.isSyncing) return;
+
+    const user = firebaseService.getCurrentUser();
+    if (!user) return;
 
     try {
-      // 1. Push local unsynced tasks to Firestore
-      await this.pushLocalChanges(userId);
+      this.isSyncing = true;
+      const unsyncedTasks = await realmService.getUnsyncedTasks(user.uid);
 
-      // 2. Pull tasks from Firestore
-      await this.pullRemoteChanges(userId);
+      console.log(
+        `📤 Starting sync: ${unsyncedTasks.length} unsynced tasks found`,
+      );
 
-      // 3. Update last sync time
-      await AsyncStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
+      for (const task of unsyncedTasks) {
+        await firebaseService.syncTaskToFirestore(task);
+        await realmService.markTaskAsSynced(task.id);
+        console.log(`✓ Marked task ${task.id} as synced locally`);
+      }
+
+      if (unsyncedTasks.length > 0) {
+        console.log('🎉 All tasks synced successfully!');
+      }
     } catch (error) {
-      console.error('Sync error:', error);
+      console.error('❌ Error syncing local to remote:', error);
     } finally {
       this.isSyncing = false;
     }
   }
 
-  private async pushLocalChanges(userId: string): Promise<void> {
-    const unsyncedTasks = await realmService.getUnsyncedTasks(userId);
-
-    for (const task of unsyncedTasks) {
-      try {
-        await firebaseService.syncTaskToFirestore(task);
-        await realmService.markTaskAsSynced(task.id);
-      } catch (error) {
-        console.error(`Failed to sync task ${task.id}:`, error);
-      }
+  private async handleRemoteTasksUpdate(remoteTasks: Task[]) {
+    for (const remoteTask of remoteTasks) {
+      await realmService.saveRemoteTask(remoteTask);
     }
   }
 
-  private async pullRemoteChanges(userId: string): Promise<void> {
+  async deleteTask(taskId: string): Promise<void> {
+    const user = firebaseService.getCurrentUser();
+    if (!user) throw new Error('User not authenticated');
+
+    console.log(`🗑️ Deleting task ${taskId} from Firestore...`);
+
     try {
-      const remoteTasks = await firebaseService.fetchTasksFromFirestore();
-      const localTasks = await realmService.getAllTasks(userId);
-
-      // Create a map of local tasks for quick lookup
-      const localTasksMap = new Map(localTasks.map(t => [t.id, t]));
-
-      for (const remoteTask of remoteTasks) {
-        const localTask = localTasksMap.get(remoteTask.id);
-
-        if (!localTask) {
-          // Task exists remotely but not locally - create it
-          await realmService.createTask({
-            userId: remoteTask.userId,
-            title: remoteTask.title,
-            description: remoteTask.description,
-            completed: remoteTask.completed,
-            dueDate: remoteTask.dueDate,
-            reminderTime: remoteTask.reminderTime,
-          });
-        } else if (
-          remoteTask.updatedAt > localTask.updatedAt &&
-          localTask.synced
-        ) {
-          // Remote task is newer and local is synced - update local
-          await realmService.updateTask(localTask.id, {
-            title: remoteTask.title,
-            description: remoteTask.description,
-            completed: remoteTask.completed,
-            dueDate: remoteTask.dueDate,
-            reminderTime: remoteTask.reminderTime,
-            updatedAt: remoteTask.updatedAt,
-          });
-          await realmService.markTaskAsSynced(localTask.id);
-        }
+      // Delete from Firestore first
+      if (this.isConnected) {
+        await firebaseService.deleteTaskFromFirestore(taskId);
+        console.log(`✅ Task ${taskId} deleted from Firestore`);
+      } else {
+        console.log(`⚠️ Offline - task will be deleted locally only`);
       }
+
+      // Then delete from local database
+      await realmService.deleteTask(taskId, user.uid);
+      console.log(`✅ Task ${taskId} deleted from local database`);
     } catch (error) {
-      console.error('Failed to pull remote changes:', error);
+      console.error('❌ Error deleting task:', error);
+      throw error;
     }
-  }
-
-  async getLastSyncTime(): Promise<number | null> {
-    const time = await AsyncStorage.getItem(LAST_SYNC_KEY);
-    return time ? parseInt(time, 10) : null;
-  }
-
-  async getPendingChangesCount(userId: string): Promise<number> {
-    const unsyncedTasks = await realmService.getUnsyncedTasks(userId);
-    return unsyncedTasks.length;
   }
 }
 

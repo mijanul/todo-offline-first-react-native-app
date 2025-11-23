@@ -39,6 +39,8 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   const [titleError, setTitleError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const isPast = task?.reminderTime ? task.reminderTime < Date.now() : false;
+
   useEffect(() => {
     if (task) {
       setTitle(task.title);
@@ -66,7 +68,7 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
     setLoading(true);
 
     try {
-      const updatedTask = await realmService.updateTask(taskId, {
+      const updatedTask = await realmService.updateTask(taskId, user.uid, {
         title: title.trim(),
         description: description.trim() || undefined,
         reminderTime: reminderTime?.getTime(),
@@ -77,7 +79,8 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         await notificationService.cancelNotification(taskId);
 
         // Schedule new notification if reminder time is set
-        if (reminderTime) {
+        // Schedule new notification if reminder time is set and in the future
+        if (reminderTime && reminderTime.getTime() > Date.now()) {
           await notificationService.scheduleTaskReminder(
             updatedTask.id,
             updatedTask.title,
@@ -86,7 +89,7 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         }
 
         dispatch(updateTask(updatedTask));
-        syncService.syncTasks(user.uid);
+        syncService.syncLocalToRemote();
         navigation.goBack();
       }
     } catch (error: any) {
@@ -136,6 +139,8 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 value={reminderTime}
                 onChange={setReminderTime}
                 mode="datetime"
+                disabled={isPast}
+                minimumDate={new Date()}
               />
 
               <View style={styles.buttons}>
