@@ -1,0 +1,20 @@
+# Environment variables - KEEP THESE SECRET!
+.env
+.env.local
+.env.*.local
+
+# Firebase config - Replace with your own!
+android/app/google-services.json
+ios/GoogleService-Info.plist
+
+# Secrets
+*.keystore
+*.jks
+!debug.keystore
+
+# Production configs
+.env.production
+
+# Local development
+.env.development.local
+.env.staging.local
