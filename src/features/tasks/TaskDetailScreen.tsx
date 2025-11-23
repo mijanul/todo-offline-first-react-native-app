@@ -7,7 +7,6 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import type { RootState } from '../../store';
 import { Button } from '../../components/atoms/Button';
 import { removeTask } from '../../store/slices/tasksSlice';
-import { realmService } from '../../services/database/realmService';
 import { syncService } from '../../services/sync/syncService';
 import { notificationService } from '../../services/notifications/notificationService';
 import type { AppStackParamList, Task } from '../../types';
@@ -40,10 +39,9 @@ export const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           if (!user) return;
           setLoading(true);
           try {
-            await realmService.deleteTask(taskId, user.uid);
             await notificationService.cancelNotification(taskId);
+            await syncService.deleteTask(taskId);
             dispatch(removeTask(taskId));
-            syncService.syncLocalToRemote();
             navigation.goBack();
           } catch {
             Alert.alert('Error', 'Failed to delete task');
