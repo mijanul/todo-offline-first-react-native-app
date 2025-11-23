@@ -119,7 +119,6 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
                 onChangeText={setTitle}
                 placeholder="What needs to be done?"
                 error={titleError}
-                leftIcon={<Text style={{ fontSize: 18 }}>📝</Text>}
               />
               <Input
                 label="Description (Optional)"
@@ -129,7 +128,6 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
                 multiline
                 numberOfLines={4}
                 style={styles.textArea}
-                leftIcon={<Text style={{ fontSize: 18 }}>📄</Text>}
               />
               <View style={styles.datePickerContainer}>
                 <DateTimePicker

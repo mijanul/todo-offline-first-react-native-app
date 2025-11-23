@@ -133,7 +133,6 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 onChangeText={setTitle}
                 placeholder="Enter task title"
                 error={titleError}
-                leftIcon={<Text style={{ fontSize: 18 }}>📝</Text>}
               />
               <Input
                 label="Description (Optional)"
@@ -143,7 +142,6 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 multiline
                 numberOfLines={4}
                 style={styles.textArea}
-                leftIcon={<Text style={{ fontSize: 18 }}>📄</Text>}
               />
               <View style={styles.datePickerContainer}>
                 <DateTimePicker
