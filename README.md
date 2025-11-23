@@ -6,6 +6,32 @@ An offline-first React Native todo application with Firebase backend integration
 
 **[Download Latest Release APK](https://drive.google.com/file/d/1jQbIAFiH-UFifS_B9ZWETs0YcWz8XFFS/view?usp=sharing)** - Install directly on your Android device
 
+## 📱 App Preview
+
+### Demo Video
+
+![Demo 1](screenshots/screencasts/Screen_Recording_20251124_013804_todo.mp4)
+
+![Demo 2](screenshots/screencasts/Screen_Recording_20251124_013915_todo.mp4)
+
+### Screenshots
+
+<table>
+  <tr>
+    <td><img src="screenshots/Screenshot_20251124_013610_todo.jpg" alt="Screenshot 1" width="250"/></td>
+    <td><img src="screenshots/Screenshot_20251124_013620_todo.jpg" alt="Screenshot 2" width="250"/></td>
+    <td><img src="screenshots/Screenshot_20251124_013646_todo.jpg" alt="Screenshot 3" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/Screenshot_20251124_013703_todo.jpg" alt="Screenshot 4" width="250"/></td>
+    <td><img src="screenshots/Screenshot_20251124_013811_todo.jpg" alt="Screenshot 5" width="250"/></td>
+    <td><img src="screenshots/Screenshot_20251124_013816_todo.jpg" alt="Screenshot 6" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/Screenshot_20251124_013931_todo.jpg" alt="Screenshot 7" width="250"/></td>
+  </tr>
+</table>
+
 ## Features
 
 - ✅ **Offline-First Architecture**: Works seamlessly without internet connection using Realm database
