@@ -6,7 +6,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
@@ -34,6 +33,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoadingState] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   const validateForm = (): boolean => {
     let isValid = true;
@@ -59,11 +59,31 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     return isValid;
   };
 
+  // Map Firebase error codes to user-friendly messages
+  const getFriendlyError = (error: any) => {
+    if (!error || !error.code) return 'An unknown error occurred.';
+    switch (error.code) {
+      case 'auth/invalid-email':
+        return 'Invalid email address.';
+      case 'auth/user-disabled':
+        return 'This account has been disabled.';
+      case 'auth/user-not-found':
+        return 'No account found with this email.';
+      case 'auth/wrong-password':
+        return 'Incorrect password.';
+      case 'auth/too-many-requests':
+        return 'Too many failed attempts. Please try again later.';
+      default:
+        return error.message || 'Authentication failed.';
+    }
+  };
+
   const handleLogin = async () => {
     if (!validateForm()) return;
 
     setLoadingState(true);
     dispatch(setLoading(true));
+    setAuthError('');
 
     try {
       const userCredential = await firebaseService.signIn(email, password);
@@ -76,7 +96,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       );
     } catch (error: any) {
       dispatch(setError(error.message));
-      Alert.alert('Login Failed', error.message);
+      setAuthError(getFriendlyError(error));
     } finally {
       setLoadingState(false);
       dispatch(setLoading(false));
@@ -104,12 +124,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: '#FFFFFF' }]}>
-                Welcome Back
-              </Text>
-              <Text
-                style={[styles.subtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}
-              >
+              <Text style={[styles.title, styles.whiteText]}>Welcome Back</Text>
+              <Text style={[styles.subtitle, styles.subtitleWhite]}>
                 Sign in to continue managing your tasks
               </Text>
             </View>
@@ -118,22 +134,34 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               <Input
                 label="Email"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={text => {
+                  setEmail(text);
+                  setAuthError('');
+                }}
                 placeholder="Enter your email"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 error={emailError}
-                leftIcon={<Text style={{ fontSize: 18 }}>✉️</Text>}
+                leftIcon={<Text style={styles.icon}>✉️</Text>}
               />
               <Input
                 label="Password"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={text => {
+                  setPassword(text);
+                  setAuthError('');
+                }}
                 placeholder="Enter your password"
                 secureTextEntry
                 error={passwordError}
-                leftIcon={<Text style={{ fontSize: 18 }}>🔒</Text>}
+                leftIcon={<Text style={styles.icon}>🔒</Text>}
               />
+
+              {authError ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{authError}</Text>
+                </View>
+              ) : null}
 
               <View style={styles.buttonContainer}>
                 <Button
@@ -157,12 +185,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 Don't have an account?
               </Text>
               <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                <Text
-                  style={[
-                    styles.footerText,
-                    { color: '#FFFFFF', fontWeight: 'bold' },
-                  ]}
-                >
+                <Text style={[styles.footerText, styles.footerTextBold]}>
                   Sign Up
                 </Text>
               </TouchableOpacity>
@@ -216,5 +239,34 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
+  },
+  errorBox: {
+    backgroundColor: '#ffebee',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e53935',
+  },
+  errorText: {
+    color: '#e53935',
+    fontSize: 15,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  whiteText: {
+    color: '#FFFFFF',
+  },
+  subtitleWhite: {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  icon: {
+    fontSize: 18,
+  },
+  footerTextBold: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });

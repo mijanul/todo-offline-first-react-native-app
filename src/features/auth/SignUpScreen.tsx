@@ -6,7 +6,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
@@ -36,6 +35,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [loading, setLoadingState] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   const validateForm = (): boolean => {
     let isValid = true;
@@ -70,11 +70,29 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     return isValid;
   };
 
+  // Map Firebase error codes to user-friendly messages
+  const getFriendlyError = (error: any) => {
+    if (!error || !error.code) return 'An unknown error occurred.';
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        return 'This email is already in use.';
+      case 'auth/invalid-email':
+        return 'Invalid email address.';
+      case 'auth/operation-not-allowed':
+        return 'Operation not allowed. Please contact support.';
+      case 'auth/weak-password':
+        return 'Password is too weak.';
+      default:
+        return error.message || 'Sign up failed.';
+    }
+  };
+
   const handleSignUp = async () => {
     if (!validateForm()) return;
 
     setLoadingState(true);
     dispatch(setLoading(true));
+    setAuthError('');
 
     try {
       const userCredential = await firebaseService.signUp(email, password);
@@ -87,7 +105,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       );
     } catch (error: any) {
       dispatch(setError(error.message));
-      Alert.alert('Sign Up Failed', error.message);
+      setAuthError(getFriendlyError(error));
     } finally {
       setLoadingState(false);
       dispatch(setLoading(false));
@@ -115,12 +133,10 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: '#FFFFFF' }]}>
+              <Text style={[styles.title, styles.whiteText]}>
                 Create Account
               </Text>
-              <Text
-                style={[styles.subtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}
-              >
+              <Text style={[styles.subtitle, styles.subtitleWhite]}>
                 Join us to start organizing your life
               </Text>
             </View>
@@ -129,31 +145,46 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               <Input
                 label="Email"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={text => {
+                  setEmail(text);
+                  setAuthError('');
+                }}
                 placeholder="Enter your email"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 error={emailError}
-                leftIcon={<Text style={{ fontSize: 18 }}>✉️</Text>}
+                leftIcon={<Text style={styles.icon}>✉️</Text>}
               />
               <Input
                 label="Password"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={text => {
+                  setPassword(text);
+                  setAuthError('');
+                }}
                 placeholder="Enter your password"
                 secureTextEntry
                 error={passwordError}
-                leftIcon={<Text style={{ fontSize: 18 }}>🔒</Text>}
+                leftIcon={<Text style={styles.icon}>🔒</Text>}
               />
               <Input
                 label="Confirm Password"
                 value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                onChangeText={text => {
+                  setConfirmPassword(text);
+                  setAuthError('');
+                }}
                 placeholder="Confirm your password"
                 secureTextEntry
                 error={confirmPasswordError}
-                leftIcon={<Text style={{ fontSize: 18 }}>🔒</Text>}
+                leftIcon={<Text style={styles.icon}>🔒</Text>}
               />
+
+              {authError ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{authError}</Text>
+                </View>
+              ) : null}
 
               <View style={styles.buttonContainer}>
                 <Button
@@ -177,12 +208,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                 Already have an account?
               </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text
-                  style={[
-                    styles.footerText,
-                    { color: '#FFFFFF', fontWeight: 'bold' },
-                  ]}
-                >
+                <Text style={[styles.footerText, styles.footerTextBold]}>
                   Sign In
                 </Text>
               </TouchableOpacity>
@@ -236,5 +262,34 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
+  },
+  errorBox: {
+    backgroundColor: '#ffebee',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e53935',
+  },
+  errorText: {
+    color: '#e53935',
+    fontSize: 15,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  whiteText: {
+    color: '#FFFFFF',
+  },
+  subtitleWhite: {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  icon: {
+    fontSize: 18,
+  },
+  footerTextBold: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 });
