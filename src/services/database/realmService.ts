@@ -14,7 +14,7 @@ class RealmService {
   async getAllTasks(userId: string): Promise<Task[]> {
     await this.init();
     const tasks = this.realm!.objects<TaskSchema>('Task').filtered(
-      'userId == $0',
+      'userId == $0 AND isDeleted == false',
       userId,
     );
     return Array.from(tasks).map(this.taskSchemaToTask);
@@ -23,7 +23,7 @@ class RealmService {
   async getTaskById(id: string, userId: string): Promise<Task | null> {
     await this.init();
     const task = this.realm!.objects<TaskSchema>('Task').filtered(
-      'id == $0 AND userId == $1',
+      'id == $0 AND userId == $1 AND isDeleted == false',
       id,
       userId,
     )[0];
@@ -31,7 +31,7 @@ class RealmService {
   }
 
   async createTask(
-    task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'synced'>,
+    task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'synced' | 'isDeleted'>,
   ): Promise<Task> {
     await this.init();
     const now = Date.now();
@@ -45,6 +45,7 @@ class RealmService {
         createdAt: now,
         updatedAt: now,
         synced: false,
+        isDeleted: false,
       });
     });
 
@@ -90,6 +91,29 @@ class RealmService {
       return false;
     }
 
+    // Soft delete: mark as deleted instead of physically removing
+    this.realm!.write(() => {
+      task.isDeleted = true;
+      task.synced = false; // Mark as unsynced so deletion gets synced
+      task.updatedAt = Date.now();
+    });
+
+    return true;
+  }
+
+  async permanentlyDeleteTask(id: string, userId: string): Promise<boolean> {
+    await this.init();
+    const task = this.realm!.objects<TaskSchema>('Task').filtered(
+      'id == $0 AND userId == $1',
+      id,
+      userId,
+    )[0];
+
+    if (!task) {
+      return false;
+    }
+
+    // Hard delete: physically remove from database
     this.realm!.write(() => {
       this.realm!.delete(task);
     });
@@ -101,6 +125,15 @@ class RealmService {
     await this.init();
     const tasks = this.realm!.objects<TaskSchema>('Task').filtered(
       'userId == $0 AND synced == false',
+      userId,
+    );
+    return Array.from(tasks).map(this.taskSchemaToTask);
+  }
+
+  async getDeletedTasks(userId: string): Promise<Task[]> {
+    await this.init();
+    const tasks = this.realm!.objects<TaskSchema>('Task').filtered(
+      'userId == $0 AND isDeleted == true AND synced == false',
       userId,
     );
     return Array.from(tasks).map(this.taskSchemaToTask);
@@ -140,6 +173,7 @@ class RealmService {
       dueDate: taskSchema.dueDate,
       reminderTime: taskSchema.reminderTime,
       synced: taskSchema.synced,
+      isDeleted: taskSchema.isDeleted,
     };
   }
 
@@ -160,6 +194,7 @@ class RealmService {
         existingTask.updatedAt = task.updatedAt;
         existingTask.dueDate = task.dueDate;
         existingTask.reminderTime = task.reminderTime;
+        existingTask.isDeleted = task.isDeleted;
         existingTask.synced = true;
       } else {
         this.realm!.create('Task', {

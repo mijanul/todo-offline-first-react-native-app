@@ -12,6 +12,7 @@ export class TaskSchema extends Realm.Object<TaskSchema> {
   dueDate?: number;
   reminderTime?: number;
   synced!: boolean;
+  isDeleted!: boolean;
 
   static schema: Realm.ObjectSchema = {
     name: 'Task',
@@ -28,14 +29,23 @@ export class TaskSchema extends Realm.Object<TaskSchema> {
       dueDate: 'int?',
       reminderTime: 'int?',
       synced: { type: 'bool', default: false },
+      isDeleted: { type: 'bool', default: false },
     },
   };
 }
 
 export const realmConfig: Realm.Configuration = {
   schema: [TaskSchema],
-  schemaVersion: 1,
+  schemaVersion: 2,
   onMigration: (oldRealm: Realm, newRealm: Realm) => {
-    // Handle migrations if schema changes
+    // Handle migration from version 1 to 2 (adding isDeleted field)
+    if (oldRealm.schemaVersion < 2) {
+      const oldObjects = oldRealm.objects('Task');
+      const newObjects = newRealm.objects('Task');
+
+      for (let i = 0; i < oldObjects.length; i++) {
+        newObjects[i].isDeleted = false;
+      }
+    }
   },
 };

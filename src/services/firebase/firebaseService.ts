@@ -45,11 +45,13 @@ class FirebaseService {
       updatedAt: task.updatedAt,
       dueDate: task.dueDate || null,
       reminderTime: task.reminderTime || null,
+      isDeleted: task.isDeleted,
     };
 
     console.log('🔄 Syncing task to Firestore:');
     console.log('  User ID:', userId);
     console.log('  Task ID:', task.id);
+    console.log('  Is Deleted:', task.isDeleted);
     console.log('  Task Data:', JSON.stringify(taskData, null, 2));
 
     await firestore()
@@ -71,6 +73,7 @@ class FirebaseService {
       .collection('users')
       .doc(userId)
       .collection('tasks')
+      .where('isDeleted', '==', false)
       .get();
 
     return snapshot.docs.map(
@@ -87,7 +90,7 @@ class FirebaseService {
   async deleteTaskFromFirestore(taskId: string): Promise<void> {
     const userId = this.getCurrentUser()?.uid;
     if (!userId) throw new Error('User not authenticated');
-    
+
     console.log('🗑️ Deleting task from Firestore:');
     console.log('  User ID:', userId);
     console.log('  Task ID:', taskId);
@@ -98,7 +101,7 @@ class FirebaseService {
       .collection('tasks')
       .doc(taskId)
       .delete();
-      
+
     console.log('✅ Task deleted from Firestore successfully!');
   }
 
@@ -117,6 +120,7 @@ class FirebaseService {
       .collection('users')
       .doc(userId)
       .collection('tasks')
+      .where('isDeleted', '==', false)
       .onSnapshot(
         snapshot => {
           const tasks = snapshot.docs.map(

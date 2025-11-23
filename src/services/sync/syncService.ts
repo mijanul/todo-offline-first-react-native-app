@@ -91,18 +91,29 @@ class SyncService {
     try {
       this.isSyncing = true;
       const unsyncedTasks = await realmService.getUnsyncedTasks(user.uid);
+      const deletedTasks = await realmService.getDeletedTasks(user.uid);
 
       console.log(
-        `📤 Starting sync: ${unsyncedTasks.length} unsynced tasks found`,
+        `📤 Starting sync: ${unsyncedTasks.length} unsynced tasks, ${deletedTasks.length} deleted tasks`,
       );
 
+      // Sync regular tasks (including updates)
       for (const task of unsyncedTasks) {
-        await firebaseService.syncTaskToFirestore(task);
-        await realmService.markTaskAsSynced(task.id);
-        console.log(`✓ Marked task ${task.id} as synced locally`);
+        if (!task.isDeleted) {
+          await firebaseService.syncTaskToFirestore(task);
+          await realmService.markTaskAsSynced(task.id);
+          console.log(`✓ Synced task ${task.id}`);
+        }
       }
 
-      if (unsyncedTasks.length > 0) {
+      // Sync deleted tasks
+      for (const task of deletedTasks) {
+        await firebaseService.deleteTaskFromFirestore(task.id);
+        await realmService.permanentlyDeleteTask(task.id, user.uid);
+        console.log(`✓ Permanently deleted task ${task.id}`);
+      }
+
+      if (unsyncedTasks.length > 0 || deletedTasks.length > 0) {
         console.log('🎉 All tasks synced successfully!');
       }
     } catch (error) {
@@ -122,20 +133,19 @@ class SyncService {
     const user = firebaseService.getCurrentUser();
     if (!user) throw new Error('User not authenticated');
 
-    console.log(`🗑️ Deleting task ${taskId} from Firestore...`);
+    console.log(`🗑️ Deleting task ${taskId}...`);
 
     try {
-      // Delete from Firestore first
-      if (this.isConnected) {
-        await firebaseService.deleteTaskFromFirestore(taskId);
-        console.log(`✅ Task ${taskId} deleted from Firestore`);
-      } else {
-        console.log(`⚠️ Offline - task will be deleted locally only`);
-      }
-
-      // Then delete from local database
+      // Soft delete locally (mark as deleted)
       await realmService.deleteTask(taskId, user.uid);
-      console.log(`✅ Task ${taskId} deleted from local database`);
+      console.log(`✅ Task ${taskId} marked as deleted locally`);
+
+      // If online, sync the deletion immediately
+      if (this.isConnected) {
+        await this.syncLocalToRemote();
+      } else {
+        console.log(`⚠️ Offline - deletion will sync when online`);
+      }
     } catch (error) {
       console.error('❌ Error deleting task:', error);
       throw error;

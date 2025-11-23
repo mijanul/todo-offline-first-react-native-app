@@ -9,6 +9,7 @@ export interface Task {
   dueDate?: number;
   reminderTime?: number;
   synced: boolean;
+  isDeleted: boolean;
 }
 
 export interface User {
