@@ -2,6 +2,10 @@
 
 An offline-first React Native todo application with Firebase backend integration, supporting both iOS and Android platforms.
 
+## 📥 Download
+
+**[Download Latest Release APK](https://drive.google.com/file/d/1jQbIAFiH-UFifS_B9ZWETs0YcWz8XFFS/view?usp=sharing)** - Install directly on your Android device
+
 ## Features
 
 - ✅ **Offline-First Architecture**: Works seamlessly without internet connection using Realm database
@@ -168,10 +172,7 @@ cd ..
 ```
 
 The generated APK will be available at:
-
-[`android/app/build/outputs/apk/release/app-release.apk`](./android/app/build/outputs/apk/release/app-release.apk)
-
-**Download Latest Release APK:** [Download from Google Drive](https://drive.google.com/file/d/1jQbIAFiH-UFifS_B9ZWETs0YcWz8XFFS/view?usp=sharing)
+`android/app/build/outputs/apk/release/app-release.apk`
 
 You can install it directly on your Android device or distribute it for testing.
 
