@@ -15,6 +15,8 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import type { RootState } from '../../store';
 import { Button } from '../../components/atoms/Button';
 import { Input } from '../../components/atoms/Input';
+import { DateTimePicker } from '../../components/atoms/DateTimePicker';
+import { notificationService } from '../../services/notifications/notificationService';
 import { addTask } from '../../store/slices/tasksSlice';
 import { realmService } from '../../services/database/realmService';
 import { syncService } from '../../services/sync/syncService';
@@ -28,15 +30,29 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [reminderTime, setReminderTime] = useState<Date>(() => {
+    const defaultTime = new Date();
+    defaultTime.setMinutes(defaultTime.getMinutes() + 5);
+    return defaultTime;
+  });
   const [titleError, setTitleError] = useState('');
+  const [reminderError, setReminderError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const validateForm = (): boolean => {
     setTitleError('');
+    setReminderError('');
+
     if (!title.trim()) {
       setTitleError('Title is required');
       return false;
     }
+
+    if (!reminderTime) {
+      setReminderError('Reminder time is required');
+      return false;
+    }
+
     return true;
   };
 
@@ -51,7 +67,15 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
         title: title.trim(),
         description: description.trim() || undefined,
         completed: false,
+        reminderTime: reminderTime.getTime(),
       });
+
+      // Schedule notification for reminder time
+      await notificationService.scheduleTaskReminder(
+        newTask.id,
+        newTask.title,
+        reminderTime.getTime(),
+      );
 
       dispatch(addTask(newTask));
       syncService.syncTasks(user.uid);
@@ -95,6 +119,14 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
                 multiline
                 numberOfLines={4}
                 style={styles.textArea}
+              />
+              <DateTimePicker
+                label="Reminder Time"
+                value={reminderTime}
+                onChange={setReminderTime}
+                mode="datetime"
+                error={reminderError}
+                required
               />
 
               <View style={styles.buttons}>

@@ -5,6 +5,7 @@ import { TaskListScreen } from '../features/tasks/TaskListScreen';
 import { TaskDetailScreen } from '../features/tasks/TaskDetailScreen';
 import { AddTaskScreen } from '../features/tasks/AddTaskScreen';
 import { EditTaskScreen } from '../features/tasks/EditTaskScreen';
+import { NotificationTestScreen } from '../screens/NotificationTestScreen';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -45,6 +46,14 @@ export const AppNavigator: React.FC = () => {
           headerShown: true,
           title: 'Edit Task',
           presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="NotificationTest"
+        component={NotificationTestScreen}
+        options={{
+          headerShown: true,
+          title: 'Notification Test',
         }}
       />
     </Stack.Navigator>

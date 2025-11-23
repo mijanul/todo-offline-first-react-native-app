@@ -95,9 +95,17 @@ export const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     <ThemedStatusBar>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>
-            My Tasks
-          </Text>
+          <View style={styles.headerRow}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
+              My Tasks
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('NotificationTest')}
+              style={styles.testButton}
+            >
+              <Text style={{ fontSize: 20 }}>🔔</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.filterContainer}>
             {(['all', 'active', 'completed'] as const).map(f => (
               <TouchableOpacity
@@ -159,10 +167,18 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 16,
+  },
+  testButton: {
+    padding: 8,
   },
   filterContainer: {
     flexDirection: 'row',

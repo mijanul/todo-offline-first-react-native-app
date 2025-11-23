@@ -56,4 +56,5 @@ export type AppStackParamList = {
   TaskDetail: { taskId: string };
   AddTask: undefined;
   EditTask: { taskId: string };
+  NotificationTest: undefined;
 };

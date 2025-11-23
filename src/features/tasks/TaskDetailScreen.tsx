@@ -9,6 +9,7 @@ import { Button } from '../../components/atoms/Button';
 import { removeTask } from '../../store/slices/tasksSlice';
 import { realmService } from '../../services/database/realmService';
 import { syncService } from '../../services/sync/syncService';
+import { notificationService } from '../../services/notifications/notificationService';
 import type { AppStackParamList, Task } from '../../types';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'TaskDetail'>;
@@ -40,6 +41,7 @@ export const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           setLoading(true);
           try {
             await realmService.deleteTask(taskId);
+            await notificationService.cancelNotification(taskId);
             dispatch(removeTask(taskId));
             syncService.syncTasks(user.uid);
             navigation.goBack();
@@ -56,6 +58,19 @@ export const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return 'Not set';
     return new Date(timestamp).toLocaleDateString();
+  };
+
+  const formatDateTime = (timestamp?: number) => {
+    if (!timestamp) return 'Not set';
+    const date = new Date(timestamp);
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    };
+    return date.toLocaleString('en-US', options);
   };
 
   if (!task) return null;
@@ -113,6 +128,19 @@ export const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                 </Text>
                 <Text style={[styles.value, { color: theme.colors.text }]}>
                   {formatDate(task.dueDate)}
+                </Text>
+              </View>
+            )}
+
+            {task.reminderTime && (
+              <View style={styles.section}>
+                <Text
+                  style={[styles.label, { color: theme.colors.textSecondary }]}
+                >
+                  Reminder
+                </Text>
+                <Text style={[styles.value, { color: theme.colors.text }]}>
+                  {formatDateTime(task.reminderTime)}
                 </Text>
               </View>
             )}

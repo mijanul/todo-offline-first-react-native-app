@@ -21,10 +21,32 @@ function App(): React.JSX.Element {
     // Initialize services
     const initializeApp = async () => {
       try {
+        console.log('🚀 Initializing app...');
         await realmService.init();
+        console.log('✅ Realm initialized');
         await notificationService.initialize();
+        console.log('✅ Notification service initialized');
+
+        // Reschedule notifications for tasks with future reminders
+        const allTasks = await realmService.getAllTasks('');
+        const tasksWithReminders = allTasks
+          .filter(task => task.reminderTime && task.reminderTime > Date.now())
+          .map(task => ({
+            id: task.id,
+            title: task.title,
+            reminderTime: task.reminderTime,
+          }));
+
+        if (tasksWithReminders.length > 0) {
+          await notificationService.rescheduleNotifications(tasksWithReminders);
+        }
+
+        console.log('✅ App initialization complete');
       } catch (error) {
-        console.error('Failed to initialize app:', error);
+        console.error('❌ Failed to initialize app:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message, error.stack);
+        }
       }
     };
 

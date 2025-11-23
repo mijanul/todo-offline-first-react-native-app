@@ -14,6 +14,8 @@ import ThemedStatusBar from '../../components/ThemedStatusBar';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { Button } from '../../components/atoms/Button';
 import { Input } from '../../components/atoms/Input';
+import { DateTimePicker } from '../../components/atoms/DateTimePicker';
+import { notificationService } from '../../services/notifications/notificationService';
 import { updateTask } from '../../store/slices/tasksSlice';
 import { realmService } from '../../services/database/realmService';
 import { syncService } from '../../services/sync/syncService';
@@ -33,6 +35,7 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [reminderTime, setReminderTime] = useState<Date | undefined>();
   const [titleError, setTitleError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -40,6 +43,9 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
     if (task) {
       setTitle(task.title);
       setDescription(task.description || '');
+      setReminderTime(
+        task.reminderTime ? new Date(task.reminderTime) : undefined,
+      );
     } else {
       navigation.goBack();
     }
@@ -63,9 +69,22 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
       const updatedTask = await realmService.updateTask(taskId, {
         title: title.trim(),
         description: description.trim() || undefined,
+        reminderTime: reminderTime?.getTime(),
       });
 
       if (updatedTask) {
+        // Cancel existing notification
+        await notificationService.cancelNotification(taskId);
+
+        // Schedule new notification if reminder time is set
+        if (reminderTime) {
+          await notificationService.scheduleTaskReminder(
+            updatedTask.id,
+            updatedTask.title,
+            reminderTime.getTime(),
+          );
+        }
+
         dispatch(updateTask(updatedTask));
         syncService.syncTasks(user.uid);
         navigation.goBack();
@@ -111,6 +130,12 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 multiline
                 numberOfLines={4}
                 style={styles.textArea}
+              />
+              <DateTimePicker
+                label="Reminder Time (Optional)"
+                value={reminderTime}
+                onChange={setReminderTime}
+                mode="datetime"
               />
 
               <View style={styles.buttons}>
