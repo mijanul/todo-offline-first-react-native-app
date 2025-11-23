@@ -18,6 +18,7 @@ import { Input } from '../../components/atoms/Input';
 import { firebaseService } from '../../services/firebase/firebaseService';
 import { useAppDispatch } from '../../store/hooks';
 import { setUser, setLoading, setError } from '../../store/slices/authSlice';
+import { ThemeToggle } from '../../components/ThemeToggle';
 import type { AuthStackParamList } from '../../types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
@@ -25,7 +26,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 const { width } = Dimensions.get('window');
 
 export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const dispatch = useAppDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -95,9 +96,14 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ThemedStatusBar>
       <LinearGradient
-        colors={[theme.colors.background, theme.colors.card]}
+        colors={
+          isDark
+            ? ['#0A84FF', '#0066CC', '#1C1C1E']
+            : ['#007AFF', '#5AC8FA', '#F5F5F7']
+        }
         style={styles.gradient}
       >
+        <ThemeToggle />
         <KeyboardAvoidingView
           style={styles.container}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -108,11 +114,11 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: theme.colors.text }]}>
+              <Text style={[styles.title, { color: '#FFFFFF' }]}>
                 Create Account
               </Text>
               <Text
-                style={[styles.subtitle, { color: theme.colors.textSecondary }]}
+                style={[styles.subtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}
               >
                 Join us to start organizing your life
               </Text>
@@ -155,6 +161,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                   loading={loading}
                   fullWidth
                   gradientColors={['#4c669f', '#3b5998', '#192f6a']}
+                  disabled={!email || !password || !confirmPassword}
                 />
               </View>
             </View>
@@ -171,8 +178,9 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               <Button
                 title="Sign In"
                 onPress={() => navigation.navigate('Login')}
-                variant="outline"
+                variant="text"
                 fullWidth
+                textColor="#FFFFFF"
               />
             </View>
           </ScrollView>

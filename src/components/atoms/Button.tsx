@@ -14,11 +14,12 @@ import { useTheme } from '../../theme/ThemeContext';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'text';
   loading?: boolean;
   fullWidth?: boolean;
   gradientColors?: string[];
   icon?: React.ReactNode;
+  textColor?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -30,6 +31,7 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   gradientColors,
   icon,
+  textColor,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -44,6 +46,7 @@ export const Button: React.FC<ButtonProps> = ({
       case 'danger':
         return theme.colors.error;
       case 'outline':
+      case 'text':
         return 'transparent';
       default:
         return theme.colors.primary;
@@ -51,9 +54,14 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const getTextColor = () => {
-    if (disabled) return theme.colors.textSecondary;
+    if (disabled) {
+      if (gradientColors) return '#FFFFFF';
+      return theme.colors.textSecondary;
+    }
+    if (textColor) return textColor;
     if (variant === 'secondary' || variant === 'outline')
       return theme.colors.text;
+    if (variant === 'text') return theme.colors.primary;
     return '#FFFFFF';
   };
 
@@ -77,16 +85,21 @@ export const Button: React.FC<ButtonProps> = ({
     </View>
   );
 
-  if (gradientColors && !disabled && variant === 'primary') {
+  if (gradientColors && variant === 'primary') {
     return (
       <TouchableOpacity
         activeOpacity={0.8}
-        disabled={loading}
-        style={[styles.container, fullWidth && styles.fullWidth, style]}
+        disabled={disabled || loading}
+        style={[
+          styles.container,
+          fullWidth && styles.fullWidth,
+          style,
+          { opacity: disabled ? 0.8 : 1 },
+        ]}
         {...props}
       >
         <LinearGradient
-          colors={gradientColors}
+          colors={disabled ? ['#9CA3AF', '#4B5563'] : gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.button, styles.gradientButton]}
