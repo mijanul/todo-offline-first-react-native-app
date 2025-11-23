@@ -33,15 +33,180 @@ An offline-first React Native todo application with Firebase backend integration
   </tr>
 </table>
 
-## Features
+## ✨ Features
 
-- ✅ **Offline-First Architecture**: Works seamlessly without internet connection using Realm database
-- 🔄 **Automatic Sync**: Background synchronization with Firebase Firestore when online
-- 🔐 **Firebase Authentication**: Secure user authentication
-- 📱 **Push Notifications**: Firebase Cloud Messaging integration with Notifee
-- 🎨 **Theme Support**: Light and dark mode with custom theming
-- 📊 **Redux State Management**: Centralized state management with Redux Toolkit
-- 🔔 **Network Status Indicator**: Real-time network connectivity monitoring
+### 1. 🔐 Authentication
+
+**Sign Up & Login** using Firebase Authentication with email/password credentials.
+
+- ✅ Email/password authentication
+- ✅ Persistent user sessions across app restarts
+- ✅ Secure authentication state management with Redux
+- ✅ Automatic session restoration on app launch
+
+---
+
+### 2. 📝 Task Management
+
+Complete CRUD operations for tasks with real-time updates.
+
+**Features:**
+
+- ✅ **Add tasks** with title, description, and reminder time
+- ✅ **Edit tasks** with validation for past/future dates
+- ✅ **Delete tasks** with soft-delete mechanism
+- ✅ **Mark tasks as complete/incomplete** with visual feedback
+- ✅ **Filter tasks** by status (All, Active, Completed)
+- ✅ **Local storage** with Realm database
+- ✅ **Cloud sync** to Firestore when online
+
+---
+
+### 3. 🔄 Offline Support
+
+**Offline-first architecture** using Realm database with automatic cloud synchronization.
+
+**Key Features:**
+
+- ✅ **Local database** using Realm for offline storage
+- ✅ **Automatic sync** when connectivity is restored
+- ✅ **Conflict resolution** with timestamp-based merging
+- ✅ **Sync status indicators** (idle, syncing, succeeded, failed)
+- ✅ **Unsynced changes tracking** for reliable data integrity
+- ✅ **Background sync** with real-time listeners
+
+**Sync Flow:**
+
+1. Changes made offline are stored locally in Realm
+2. Network connectivity is monitored continuously
+3. When online, unsynced tasks are pushed to Firestore
+4. Remote changes are pulled and merged with local data
+5. Visual sync status displayed in the UI
+
+---
+
+### 4. 🔔 Push Notifications
+
+**Local and remote push notifications** using Notifee and Firebase Cloud Messaging.
+
+**Features:**
+
+- ✅ **Local push notifications** for task reminders
+- ✅ **Firebase Cloud Messaging** integration for remote notifications
+- ✅ **Scheduled notifications** with exact timing
+- ✅ **Notification channels** for Android with custom importance levels
+- ✅ **Permission management** for iOS and Android
+- ✅ **FCM token management** for targeted messaging
+- ✅ **Background & foreground** notification handling
+
+---
+
+### 5. 🌍 Multi-Environment Configuration
+
+Support for **development, staging, and production** environments.
+
+**Environment Files:**
+
+- `.env.development` - Development configuration
+- `.env.staging` - Staging configuration
+- `.env.production` - Production configuration
+
+**Run Commands:**
+
+- Development: `npm run android:dev` / `npm run ios:dev`
+- Staging: `npm run android:staging` / `npm run ios:staging`
+- Production: `npm run android:prod` / `npm run ios:prod`
+
+Each environment can have separate Firebase projects, API endpoints, and feature flags.
+
+---
+
+### 6. 🎨 Theming
+
+**Dynamic light/dark mode** with comprehensive theme system.
+
+**Features:**
+
+- ✅ **Light & dark mode** with smooth transitions
+- ✅ **Theme toggle** with floating action button
+- ✅ **Persistent theme preference** across sessions
+- ✅ **Gradient backgrounds** adapting to theme
+- ✅ **Comprehensive design tokens** (colors, spacing, typography, shadows)
+- ✅ **Animated theme transitions** for enhanced UX
+
+---
+
+### 7. 📊 State Management
+
+**Redux Toolkit** for centralized, predictable state management.
+
+**Redux Slices:**
+
+- `authSlice` - User authentication state
+- `taskSlice` - Task data and operations
+- `syncSlice` - Synchronization status
+- `themeSlice` - Theme preferences
+
+**Benefits:**
+
+- ✅ Type-safe state management with TypeScript
+- ✅ Immutable state updates
+- ✅ DevTools integration for debugging
+- ✅ Middleware support for async operations
+
+---
+
+### 8. 🧭 Navigation
+
+**React Navigation 7.x** with proper stack structure.
+
+**Navigation Stacks:**
+
+- **Auth Stack** - Login, Sign Up screens
+- **App Stack** - Main application screens
+- **Tab Navigator** - Tasks, Settings, Notifications tabs
+
+**Features:**
+
+- ✅ **Conditional navigation** based on auth state
+- ✅ **Type-safe navigation** with TypeScript
+- ✅ **Deep linking** support
+- ✅ **Lazy loading** of screens for performance
+- ✅ **Smooth transitions** and animations
+
+---
+
+### 9. ⚡ Performance Optimizations
+
+**Production-ready optimizations** for smooth user experience.
+
+#### FlatList Optimizations
+
+- ✅ **Virtualization** with optimized rendering
+- ✅ **Item layout calculation** for smooth scrolling
+- ✅ **Batch rendering** for better performance
+- ✅ **Clipped subviews removal** to reduce memory usage
+
+#### Code Optimizations
+
+- ✅ **Memoized components** using React.memo
+- ✅ **Lazy loading** of screens and components
+- ✅ **Debounced search** and filtering
+- ✅ **Optimized re-renders** with useCallback and useMemo
+- ✅ **Image optimization** and caching
+- ✅ **Bundle size optimization** with code splitting
+
+---
+
+### Additional Features
+
+- 🔔 **Network Status Indicator** - Real-time connectivity monitoring
+- 🎯 **Pull-to-refresh** - Manual sync trigger
+- 🔍 **Task filtering** - By completion status
+- 📱 **Responsive UI** - Adapts to different screen sizes
+- 🎭 **Animated interactions** - Smooth micro-animations
+- 🛡️ **Error handling** - Comprehensive error boundaries
+- 📝 **TypeScript** - Full type safety across the codebase
 
 ## Tech Stack
 

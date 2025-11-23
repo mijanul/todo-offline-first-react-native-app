@@ -1,99 +1,135 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, Suspense, lazy } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Platform, Animated, StyleSheet } from 'react-native';
+import {
+  View,
+  Platform,
+  Animated,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { TabParamList } from '../types';
-import { TaskListScreen } from '../features/tasks/TaskListScreen';
-import { SettingsScreen } from '../features/settings/SettingsScreen';
-import { NotificationTestScreen } from '../features/notifications/NotificationTestScreen';
 import { useTheme } from '../theme/ThemeContext';
 
+// Lazy load screens
+const TaskListScreen = lazy(() =>
+  import('../features/tasks/TaskListScreen').then(module => ({
+    default: module.TaskListScreen,
+  })),
+);
+const SettingsScreen = lazy(() =>
+  import('../features/settings/SettingsScreen').then(module => ({
+    default: module.SettingsScreen,
+  })),
+);
+const NotificationTestScreen = lazy(() =>
+  import('../features/notifications/NotificationTestScreen').then(module => ({
+    default: module.NotificationTestScreen,
+  })),
+);
+
 const Tab = createBottomTabNavigator<TabParamList>();
+
+const LoadingFallback = () => {
+  const { theme } = useTheme();
+  return (
+    <View
+      style={[
+        styles.loadingContainer,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
+      <ActivityIndicator size="large" color={theme.colors.primary} />
+    </View>
+  );
+};
 
 export const TabNavigator: React.FC = () => {
   const { theme, isDark } = useTheme();
 
   return (
-    // @ts-expect-error - React Navigation v7 strict typing issue
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textSecondary,
-        tabBarStyle: {
-          position: 'absolute',
-          bottom: Platform.OS === 'ios' ? 20 : 16,
-          left: 20,
-          right: 20,
-          backgroundColor: isDark
-            ? 'rgba(28, 28, 30, 0.85)'
-            : 'rgba(255, 255, 255, 0.85)',
-          borderRadius: 24,
-          borderTopWidth: 0,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 12,
-          paddingTop: 12,
-          height: Platform.OS === 'ios' ? 88 : 72,
-          shadowColor: theme.colors.shadow,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDark ? 0.4 : 0.15,
-          shadowRadius: 16,
-          elevation: 12,
-          borderWidth: 1,
-          borderColor: isDark
-            ? 'rgba(255, 255, 255, 0.1)'
-            : 'rgba(0, 0, 0, 0.05)',
-          overflow: 'hidden',
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '700',
-          marginTop: 6,
-          letterSpacing: 0.3,
-        },
-        tabBarBackground: () => (
-          <View
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              borderRadius: 24,
-              overflow: 'hidden',
-              backgroundColor: isDark
-                ? 'rgba(28, 28, 30, 0.85)'
-                : 'rgba(255, 255, 255, 0.85)',
-            }}
-          />
-        ),
-      }}
-    >
-      <Tab.Screen
-        name="Tasks"
-        component={TaskListScreen}
-        options={{
-          tabBarLabel: 'Tasks',
-          tabBarIcon: ({ color, focused }) => (
-            <TaskIcon color={color} focused={focused} />
+    <Suspense fallback={<LoadingFallback />}>
+      {/* @ts-expect-error - React Navigation v7 strict typing issue */}
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.textSecondary,
+          tabBarStyle: {
+            position: 'absolute',
+            bottom: Platform.OS === 'ios' ? 20 : 16,
+            left: 20,
+            right: 20,
+            backgroundColor: isDark
+              ? 'rgba(28, 28, 30, 0.85)'
+              : 'rgba(255, 255, 255, 0.85)',
+            borderRadius: 24,
+            borderTopWidth: 0,
+            paddingBottom: Platform.OS === 'ios' ? 20 : 12,
+            paddingTop: 12,
+            height: Platform.OS === 'ios' ? 88 : 72,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: isDark ? 0.4 : 0.15,
+            shadowRadius: 16,
+            elevation: 12,
+            borderWidth: 1,
+            borderColor: isDark
+              ? 'rgba(255, 255, 255, 0.1)'
+              : 'rgba(0, 0, 0, 0.05)',
+            overflow: 'hidden',
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '700',
+            marginTop: 6,
+            letterSpacing: 0.3,
+          },
+          tabBarBackground: () => (
+            <View
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                borderRadius: 24,
+                overflow: 'hidden',
+                backgroundColor: isDark
+                  ? 'rgba(28, 28, 30, 0.85)'
+                  : 'rgba(255, 255, 255, 0.85)',
+              }}
+            />
           ),
         }}
-      />
-      <Tab.Screen
-        name="NotificationTest"
-        component={NotificationTestScreen}
-        options={{
-          tabBarLabel: 'Test',
-          tabBarIcon: ({ color, focused }) => (
-            <NotificationIcon color={color} focused={focused} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarLabel: 'Settings',
-          tabBarIcon: ({ color, focused }) => (
-            <SettingsIcon color={color} focused={focused} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+      >
+        <Tab.Screen
+          name="Tasks"
+          component={TaskListScreen}
+          options={{
+            tabBarLabel: 'Tasks',
+            tabBarIcon: ({ color, focused }) => (
+              <TaskIcon color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="NotificationTest"
+          component={NotificationTestScreen}
+          options={{
+            tabBarLabel: 'Test',
+            tabBarIcon: ({ color, focused }) => (
+              <NotificationIcon color={color} focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            tabBarLabel: 'Settings',
+            tabBarIcon: ({ color, focused }) => (
+              <SettingsIcon color={color} focused={focused} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    </Suspense>
   );
 };
 
@@ -393,3 +429,11 @@ const SettingsIcon: React.FC<{ color: string; focused: boolean }> = ({
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
