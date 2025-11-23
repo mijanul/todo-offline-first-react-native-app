@@ -457,6 +457,7 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     gap: 10,
+    justifyContent: 'center',
   },
   filterButton: {
     flexDirection: 'row',
