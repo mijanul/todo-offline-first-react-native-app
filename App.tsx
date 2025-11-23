@@ -16,6 +16,8 @@ import { realmService } from './src/services/database/realmService';
 import { notificationService } from './src/services/notifications/notificationService';
 import { syncService } from './src/services/sync/syncService';
 import ThemedStatusBar from './src/components/ThemedStatusBar';
+import { OfflineBanner } from './src/components/OfflineBanner';
+import { NetworkProvider } from './src/components/NetworkProvider';
 
 function App(): React.JSX.Element {
   useEffect(() => {
@@ -65,14 +67,17 @@ function App(): React.JSX.Element {
 
   return (
     <Provider store={store}>
-      <SafeAreaProvider>
-        <GestureHandlerRootView style={styles.container}>
-          <ThemeProvider>
-            <ThemedStatusBar />
-            <RootNavigator />
-          </ThemeProvider>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
+      <NetworkProvider>
+        <SafeAreaProvider>
+          <GestureHandlerRootView style={styles.container}>
+            <ThemeProvider>
+              <ThemedStatusBar />
+              <OfflineBanner />
+              <RootNavigator />
+            </ThemeProvider>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </NetworkProvider>
     </Provider>
   );
 }

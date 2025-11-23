@@ -19,6 +19,7 @@ import { toggleTheme } from '../../store/slices/themeSlice';
 import { clearAuth } from '../../store/slices/authSlice';
 import { firebaseService } from '../../services/firebase/firebaseService';
 import LinearGradient from 'react-native-linear-gradient';
+import type { RootState } from '../../store';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +28,9 @@ export const SettingsScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: any) => state.auth.user);
   const themeMode = useAppSelector((state: any) => state.theme.mode);
+  const isConnected = useAppSelector(
+    (state: RootState) => state.network.isConnected,
+  );
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isDarkMode = themeMode === 'dark';
@@ -36,6 +40,15 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
+    if (!isConnected) {
+      Alert.alert(
+        'No Internet Connection',
+        'Please check your internet connection to logout.',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
+
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -225,7 +238,15 @@ export const SettingsScreen: React.FC = () => {
                 isDark ? ['#FF453A', '#FF6961'] : ['#FF3B30', '#FF2D55']
               }
               icon={<LogoutIcon color="#FFFFFF" />}
+              disabled={!isConnected || isLoggingOut}
             />
+            {!isConnected && (
+              <Text
+                style={[styles.offlineWarning, { color: theme.colors.error }]}
+              >
+                Logout requires internet connection
+              </Text>
+            )}
           </View>
 
           {/* App Info */}
@@ -598,5 +619,11 @@ const styles = StyleSheet.create({
   appInfoSubtext: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  offlineWarning: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

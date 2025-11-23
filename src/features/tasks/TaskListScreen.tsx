@@ -265,7 +265,7 @@ export const TaskListScreen: React.FC = () => {
             </View>
 
             <View style={styles.filterContainer}>
-              {(['active', 'completed', 'all'] as const).map(f => (
+              {(['all', 'active', 'completed'] as const).map(f => (
                 <FilterPill
                   key={f}
                   label={f.charAt(0).toUpperCase() + f.slice(1)}

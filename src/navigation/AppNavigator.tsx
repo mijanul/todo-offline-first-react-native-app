@@ -4,7 +4,7 @@ import { AppStackParamList } from '../types';
 import { TabNavigator } from './TabNavigator';
 import { TaskDetailScreen } from '../features/tasks/TaskDetailScreen';
 import { TaskFormScreen } from '../features/tasks/TaskFormScreen';
-import { NotificationTestScreen } from '../screens/NotificationTestScreen';
+import { NotificationTestScreen } from '../features/notifications/NotificationTestScreen';
 import { useTheme } from '../theme/ThemeContext';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();

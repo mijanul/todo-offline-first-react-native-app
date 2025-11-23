@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,10 +17,11 @@ import ThemedStatusBar from '../../components/ThemedStatusBar';
 import { Button } from '../../components/atoms/Button';
 import { Input } from '../../components/atoms/Input';
 import { firebaseService } from '../../services/firebase/firebaseService';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setUser, setLoading, setError } from '../../store/slices/authSlice';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import type { AuthStackParamList } from '../../types';
+import type { RootState } from '../../store';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -28,6 +30,9 @@ const { width } = Dimensions.get('window');
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { theme, isDark } = useTheme();
   const dispatch = useAppDispatch();
+  const isConnected = useAppSelector(
+    (state: RootState) => state.network.isConnected,
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -79,6 +84,15 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleLogin = async () => {
+    if (!isConnected) {
+      Alert.alert(
+        'No Internet Connection',
+        'Please check your internet connection and try again.',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
+
     if (!validateForm()) return;
 
     setLoadingState(true);
@@ -170,7 +184,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                   loading={loading}
                   fullWidth
                   gradientColors={['#4c669f', '#3b5998', '#192f6a']}
-                  disabled={!email || !password}
+                  disabled={!email || !password || !isConnected}
                 />
               </View>
             </View>

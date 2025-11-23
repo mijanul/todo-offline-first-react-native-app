@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import tasksReducer from './slices/tasksSlice';
 import themeReducer from './slices/themeSlice';
 import syncReducer from './slices/syncSlice';
+import networkReducer from './slices/networkSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     tasks: tasksReducer,
     theme: themeReducer,
     sync: syncReducer,
+    network: networkReducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({

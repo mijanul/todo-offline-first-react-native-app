@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
-  Dimensions,
 } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import LinearGradient from 'react-native-linear-gradient';
@@ -15,14 +14,13 @@ import { useTheme } from '../../theme/ThemeContext';
 import { notificationService } from '../../services/notifications/notificationService';
 import ThemedStatusBar from '../../components/ThemedStatusBar';
 
-const { width } = Dimensions.get('window');
-
 export const NotificationTestScreen: React.FC = () => {
   const { theme, isDark } = useTheme();
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [permissionStatus, setPermissionStatus] =
     useState<string>('Checking...');
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     loadTokenAndPermissions();
@@ -81,11 +79,53 @@ export const NotificationTestScreen: React.FC = () => {
     Alert.alert('Scheduled', 'Notification scheduled for 5 seconds from now');
   };
 
+  // Dynamic styles for theme and state
+  const themedStyles = StyleSheet.create({
+    containerBg: {
+      backgroundColor: theme.colors.background,
+    },
+    cardBg: {
+      backgroundColor: isDark
+        ? 'rgba(28, 28, 30, 0.8)'
+        : 'rgba(255, 255, 255, 0.9)',
+      borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+    },
+    cardTitleColor: {
+      color: theme.colors.text,
+    },
+    cardSubtitleColor: {
+      color: theme.colors.textSecondary,
+    },
+    refreshText: {
+      color: theme.colors.primary,
+      fontWeight: '600' as const,
+    },
+    statusTextColor: {
+      color: theme.colors.textSecondary,
+    },
+    buttonBg: {
+      backgroundColor: theme.colors.primary,
+    },
+    buttonWarningBg: {
+      backgroundColor: theme.colors.warning,
+    },
+    outlineButtonBorder: {
+      borderColor: theme.colors.primary,
+    },
+    outlineButtonTextColor: {
+      color: theme.colors.primary,
+    },
+    statusIndicatorGranted: {
+      backgroundColor: '#34C759',
+    },
+    statusIndicatorDenied: {
+      backgroundColor: '#FF3B30',
+    },
+  });
+
   return (
     <ThemedStatusBar>
-      <View
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
+      <View style={[styles.container, themedStyles.containerBg]}>
         {/* Gradient Header */}
         <LinearGradient
           colors={
@@ -106,34 +146,19 @@ export const NotificationTestScreen: React.FC = () => {
         </LinearGradient>
 
         <ScrollView
+          ref={scrollRef}
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* Permission Status Card */}
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(28, 28, 30, 0.8)'
-                  : 'rgba(255, 255, 255, 0.9)',
-                borderColor: isDark
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(0, 0, 0, 0.05)',
-              },
-            ]}
-          >
+          <View style={[styles.card, themedStyles.cardBg]}>
             <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+              <Text style={[styles.cardTitle, themedStyles.cardTitleColor]}>
                 Permission Status
               </Text>
               <TouchableOpacity onPress={loadTokenAndPermissions}>
-                <Text
-                  style={{ color: theme.colors.primary, fontWeight: '600' }}
-                >
-                  Refresh
-                </Text>
+                <Text style={themedStyles.refreshText}>Refresh</Text>
               </TouchableOpacity>
             </View>
 
@@ -141,31 +166,20 @@ export const NotificationTestScreen: React.FC = () => {
               <View
                 style={[
                   styles.statusIndicator,
-                  {
-                    backgroundColor:
-                      permissionStatus === 'AUTHORIZED' ||
-                      permissionStatus === 'PROVISIONAL'
-                        ? '#34C759'
-                        : '#FF3B30',
-                  },
+                  permissionStatus === 'AUTHORIZED' ||
+                  permissionStatus === 'PROVISIONAL'
+                    ? themedStyles.statusIndicatorGranted
+                    : themedStyles.statusIndicatorDenied,
                 ]}
               />
-              <Text
-                style={[
-                  styles.statusText,
-                  { color: theme.colors.textSecondary },
-                ]}
-              >
+              <Text style={[styles.statusText, themedStyles.statusTextColor]}>
                 {permissionStatus}
               </Text>
             </View>
             {permissionStatus !== 'AUTHORIZED' &&
               permissionStatus !== 'PROVISIONAL' && (
                 <TouchableOpacity
-                  style={[
-                    styles.button,
-                    { backgroundColor: theme.colors.primary },
-                  ]}
+                  style={[styles.button, themedStyles.buttonBg]}
                   onPress={handleRequestPermission}
                   disabled={loading}
                 >
@@ -175,40 +189,25 @@ export const NotificationTestScreen: React.FC = () => {
           </View>
 
           {/* FCM Token Card */}
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(28, 28, 30, 0.8)'
-                  : 'rgba(255, 255, 255, 0.9)',
-                borderColor: isDark
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(0, 0, 0, 0.05)',
-              },
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+          <View style={[styles.card, themedStyles.cardBg]}>
+            <Text style={[styles.cardTitle, themedStyles.cardTitleColor]}>
               FCM Token
             </Text>
             <Text
-              style={[styles.tokenText, { color: theme.colors.textSecondary }]}
+              style={[styles.tokenText, themedStyles.cardSubtitleColor]}
               numberOfLines={4}
             >
               {fcmToken || 'No token available (Check permissions)'}
             </Text>
             {fcmToken && (
               <TouchableOpacity
-                style={[
-                  styles.outlineButton,
-                  { borderColor: theme.colors.primary },
-                ]}
+                style={[styles.outlineButton, themedStyles.outlineButtonBorder]}
                 onPress={copyToClipboard}
               >
                 <Text
                   style={[
                     styles.outlineButtonText,
-                    { color: theme.colors.primary },
+                    themedStyles.outlineButtonTextColor,
                   ]}
                 >
                   Copy Token
@@ -217,26 +216,36 @@ export const NotificationTestScreen: React.FC = () => {
             )}
           </View>
 
+          {/* Testing Actions Card */}
+          <View style={[styles.card, themedStyles.cardBg]}>
+            <Text style={[styles.cardTitle, themedStyles.cardTitleColor]}>
+              Test Actions
+            </Text>
+            <View style={styles.spacer} />
+            <TouchableOpacity
+              style={[styles.button, themedStyles.buttonBg]}
+              onPress={handleTestNotification}
+            >
+              <Text style={styles.buttonText}>Trigger Local Notification</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.buttonMarginTop,
+                themedStyles.buttonWarningBg,
+              ]}
+              onPress={handleScheduleNotification}
+            >
+              <Text style={styles.buttonText}>Schedule (5s)</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Guide Card */}
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(28, 28, 30, 0.8)'
-                  : 'rgba(255, 255, 255, 0.9)',
-                borderColor: isDark
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(0, 0, 0, 0.05)',
-              },
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+          <View style={[styles.card, themedStyles.cardBg]}>
+            <Text style={[styles.cardTitle, themedStyles.cardTitleColor]}>
               How to Send Remote Notifications
             </Text>
-            <Text
-              style={[styles.guideText, { color: theme.colors.textSecondary }]}
-            >
+            <Text style={[styles.guideText, themedStyles.cardSubtitleColor]}>
               1. Copy the FCM Token above.{'\n'}
               2. Go to Firebase Console {'>'} Cloud Messaging.{'\n'}
               3. Create a new campaign.{'\n'}
@@ -245,40 +254,6 @@ export const NotificationTestScreen: React.FC = () => {
               Or use a tool like Postman to send a POST request to FCM API with
               this token.
             </Text>
-          </View>
-
-          {/* Testing Actions Card */}
-          <View
-            style={[
-              styles.card,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(28, 28, 30, 0.8)'
-                  : 'rgba(255, 255, 255, 0.9)',
-                borderColor: isDark
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(0, 0, 0, 0.05)',
-              },
-            ]}
-          >
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-              Test Actions
-            </Text>
-            <TouchableOpacity
-              style={[styles.button, { backgroundColor: theme.colors.primary }]}
-              onPress={handleTestNotification}
-            >
-              <Text style={styles.buttonText}>Trigger Local Notification</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                { backgroundColor: theme.colors.warning, marginTop: 12 },
-              ]}
-              onPress={handleScheduleNotification}
-            >
-              <Text style={styles.buttonText}>Schedule (5s)</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </View>
@@ -292,7 +267,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 80, // Reduced padding bottom since we don't have the profile card
+    paddingBottom: 80,
     paddingHorizontal: 24,
   },
   headerContent: {
@@ -312,7 +287,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    marginTop: -40, // Overlap the header
+    marginTop: -40,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -370,6 +345,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
+  buttonMarginTop: {
+    marginTop: 12,
+  },
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
@@ -385,5 +363,8 @@ const styles = StyleSheet.create({
   outlineButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  spacer: {
+    height: 12,
   },
 });
