@@ -6,12 +6,14 @@ import {
   Text,
   TextInputProps,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
+  leftIcon?: React.ReactNode;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -19,6 +21,7 @@ export const Input: React.FC<InputProps> = ({
   error,
   style,
   secureTextEntry,
+  leftIcon,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -32,24 +35,39 @@ export const Input: React.FC<InputProps> = ({
   return (
     <View style={styles.container}>
       {label && (
-        <Text style={[styles.label, { color: theme.colors.text }]}>
+        <Text
+          style={[
+            styles.label,
+            { color: error ? theme.colors.error : theme.colors.text },
+          ]}
+        >
           {label}
         </Text>
       )}
-      <View style={styles.inputContainer}>
+      <View
+        style={[
+          styles.inputContainer,
+          {
+            backgroundColor: theme.colors.card, // Use card background for better contrast
+            borderColor: error
+              ? theme.colors.error
+              : isFocused
+              ? theme.colors.primary
+              : 'transparent',
+            shadowColor: isFocused ? theme.colors.primary : '#000',
+            shadowOpacity: isFocused ? 0.1 : 0.05,
+          },
+        ]}
+      >
+        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
         <RNTextInput
           style={[
             styles.input,
             {
-              backgroundColor: theme.colors.inputBackground,
               color: theme.colors.text,
-              borderColor: error
-                ? theme.colors.error
-                : isFocused
-                ? theme.colors.inputFocusBorder
-                : theme.colors.inputBorder,
             },
-            secureTextEntry && styles.inputWithIcon,
+            leftIcon && styles.inputWithLeftIcon,
+            secureTextEntry && styles.inputWithRightIcon,
             style,
           ]}
           placeholderTextColor={theme.colors.textSecondary}
@@ -83,41 +101,56 @@ export const Input: React.FC<InputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     marginBottom: 8,
+    marginLeft: 4,
   },
   inputContainer: {
-    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 4,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowRadius: 4,
+    elevation: 2,
   },
   input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     fontSize: 16,
-    minHeight: 44,
+    minHeight: 50,
   },
-  inputWithIcon: {
+  inputWithLeftIcon: {
+    paddingLeft: 40,
+  },
+  inputWithRightIcon: {
     paddingRight: 48,
+  },
+  leftIcon: {
+    position: 'absolute',
+    left: 12,
+    zIndex: 1,
   },
   eyeButton: {
     position: 'absolute',
     right: 12,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 32,
+    padding: 8,
   },
   eyeIcon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   error: {
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 6,
+    marginLeft: 4,
   },
 });

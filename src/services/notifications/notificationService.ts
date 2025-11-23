@@ -2,6 +2,7 @@ import notifee, {
   AndroidImportance,
   TriggerType,
   TimestampTrigger,
+  AuthorizationStatus,
 } from '@notifee/react-native';
 import { Platform } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
@@ -66,7 +67,9 @@ class NotificationService {
         const settings = await notifee.requestPermission();
         console.log('🔔 Notifee permission settings:', settings);
 
-        const enabled = settings.authorizationStatus >= 1; // 1 = AUTHORIZED, 2 = PROVISIONAL
+        const enabled =
+          settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
+          settings.authorizationStatus === AuthorizationStatus.PROVISIONAL;
 
         if (enabled) {
           console.log('✅ Android notification permission granted');
@@ -109,7 +112,10 @@ class NotificationService {
       if (Platform.OS === 'android') {
         // For Android, use Notifee to check actual system permission status
         const settings = await notifee.getNotificationSettings();
-        return settings.authorizationStatus >= 2; // 2 = AUTHORIZED
+        return (
+          settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
+          settings.authorizationStatus === AuthorizationStatus.PROVISIONAL
+        );
       } else {
         // For iOS, use Firebase messaging
         const authStatus = await messaging().hasPermission();
@@ -133,13 +139,15 @@ class NotificationService {
       if (Platform.OS === 'android') {
         const settings = await notifee.getNotificationSettings();
         const statusMap: { [key: number]: string } = {
-          0: 'NOT_DETERMINED',
-          1: 'DENIED',
-          2: 'AUTHORIZED',
-          3: 'PROVISIONAL',
+          [AuthorizationStatus.NOT_DETERMINED]: 'NOT_DETERMINED',
+          [AuthorizationStatus.DENIED]: 'DENIED',
+          [AuthorizationStatus.AUTHORIZED]: 'AUTHORIZED',
+          [AuthorizationStatus.PROVISIONAL]: 'PROVISIONAL',
         };
         return {
-          granted: settings.authorizationStatus >= 2,
+          granted:
+            settings.authorizationStatus === AuthorizationStatus.AUTHORIZED ||
+            settings.authorizationStatus === AuthorizationStatus.PROVISIONAL,
           status: statusMap[settings.authorizationStatus] || 'UNKNOWN',
           authorizationStatus: settings.authorizationStatus,
         };

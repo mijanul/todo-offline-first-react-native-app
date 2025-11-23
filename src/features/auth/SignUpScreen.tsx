@@ -7,7 +7,9 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Dimensions,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme/ThemeContext';
 import ThemedStatusBar from '../../components/ThemedStatusBar';
@@ -19,6 +21,8 @@ import { setUser, setLoading, setError } from '../../store/slices/authSlice';
 import type { AuthStackParamList } from '../../types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
+
+const { width } = Dimensions.get('window');
 
 export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const { theme } = useTheme();
@@ -90,26 +94,29 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ThemedStatusBar>
-      <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <LinearGradient
+        colors={[theme.colors.background, theme.colors.card]}
+        style={styles.gradient}
       >
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { backgroundColor: theme.colors.background },
-          ]}
-          keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.content}>
-            <Text style={[styles.title, { color: theme.colors.text }]}>
-              Create Account
-            </Text>
-            <Text
-              style={[styles.subtitle, { color: theme.colors.textSecondary }]}
-            >
-              Sign up to get started
-            </Text>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.header}>
+              <Text style={[styles.title, { color: theme.colors.text }]}>
+                Create Account
+              </Text>
+              <Text
+                style={[styles.subtitle, { color: theme.colors.textSecondary }]}
+              >
+                Join us to start organizing your life
+              </Text>
+            </View>
 
             <View style={styles.form}>
               <Input
@@ -120,6 +127,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 error={emailError}
+                leftIcon={<Text style={{ fontSize: 18 }}>✉️</Text>}
               />
               <Input
                 label="Password"
@@ -128,6 +136,7 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder="Enter your password"
                 secureTextEntry
                 error={passwordError}
+                leftIcon={<Text style={{ fontSize: 18 }}>🔒</Text>}
               />
               <Input
                 label="Confirm Password"
@@ -136,13 +145,18 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder="Confirm your password"
                 secureTextEntry
                 error={confirmPasswordError}
+                leftIcon={<Text style={{ fontSize: 18 }}>🔒</Text>}
               />
-              <Button
-                title="Sign Up"
-                onPress={handleSignUp}
-                loading={loading}
-                fullWidth
-              />
+
+              <View style={styles.buttonContainer}>
+                <Button
+                  title="Sign Up"
+                  onPress={handleSignUp}
+                  loading={loading}
+                  fullWidth
+                  gradientColors={['#4c669f', '#3b5998', '#192f6a']}
+                />
+              </View>
             </View>
 
             <View style={styles.footer}>
@@ -152,51 +166,61 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                   { color: theme.colors.textSecondary },
                 ]}
               >
-                Already have an account?{' '}
+                Already have an account?
               </Text>
               <Button
                 title="Sign In"
                 onPress={() => navigation.navigate('Login')}
-                variant="secondary"
+                variant="outline"
+                fullWidth
               />
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </ThemedStatusBar>
   );
 };
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-  },
-  content: {
-    flex: 1,
     padding: 24,
     justifyContent: 'center',
   },
+  header: {
+    marginBottom: 40,
+    alignItems: 'center',
+  },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: 36,
+    fontWeight: '800',
+    marginBottom: 12,
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 32,
+    textAlign: 'center',
+    lineHeight: 24,
+    maxWidth: width * 0.8,
   },
   form: {
-    marginBottom: 24,
+    marginBottom: 32,
+  },
+  buttonContainer: {
+    marginTop: 16,
   },
   footer: {
     alignItems: 'center',
-    marginTop: 16,
+    gap: 16,
   },
   footerText: {
     fontSize: 14,
-    marginBottom: 8,
   },
 });

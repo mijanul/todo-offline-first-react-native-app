@@ -55,6 +55,7 @@ export type AuthStackParamList = {
 export type TabParamList = {
   Tasks: undefined;
   Settings: undefined;
+  NotificationTest: undefined;
 };
 
 export type AppStackParamList = {

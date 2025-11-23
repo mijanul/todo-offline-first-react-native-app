@@ -46,6 +46,7 @@ export const TaskListScreen: React.FC = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const { status, lastSyncedAt } = useSyncStatus();
   const [refreshing, setRefreshing] = useState(false);
+  const [showSyncBadge, setShowSyncBadge] = useState(false);
   const fabScale = useRef(new Animated.Value(1)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
 
@@ -56,6 +57,25 @@ export const TaskListScreen: React.FC = () => {
       useNativeDriver: true,
     }).start();
   }, []);
+
+  // Auto-hide sync badge after showing "Synced" for 2 seconds
+  useEffect(() => {
+    if (status === 'syncing') {
+      setShowSyncBadge(true);
+    } else if (status === 'succeeded') {
+      setShowSyncBadge(true);
+      const timer = setTimeout(() => {
+        setShowSyncBadge(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else if (status === 'failed') {
+      setShowSyncBadge(true);
+      const timer = setTimeout(() => {
+        setShowSyncBadge(false);
+      }, 5000); // Show error for longer
+      return () => clearTimeout(timer);
+    }
+  }, [status]);
 
   const loadTasks = useCallback(async () => {
     if (!user) return;
@@ -229,7 +249,7 @@ export const TaskListScreen: React.FC = () => {
               <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
                 My Tasks
               </Text>
-              {status !== 'idle' && (
+              {showSyncBadge && (
                 <View style={styles.syncBadge}>
                   <View
                     style={[
@@ -502,7 +522,7 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 100, // Positioned above floating tab bar
     right: 24,
   },
   fab: {

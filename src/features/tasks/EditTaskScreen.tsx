@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../../theme/ThemeContext';
 import ThemedStatusBar from '../../components/ThemedStatusBar';
@@ -104,21 +105,26 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <ThemedStatusBar>
-      <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <LinearGradient
+        colors={[theme.colors.background, theme.colors.card]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
       >
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { backgroundColor: theme.colors.background },
-          ]}
-          keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.content}>
-            <Text style={[styles.title, { color: theme.colors.text }]}>
-              Edit Task
-            </Text>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.header}>
+              <Text style={[styles.title, { color: theme.colors.text }]}>
+                Edit Task
+              </Text>
+            </View>
 
             <View style={styles.form}>
               <Input
@@ -127,6 +133,7 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 onChangeText={setTitle}
                 placeholder="Enter task title"
                 error={titleError}
+                leftIcon={<Text style={{ fontSize: 18 }}>📝</Text>}
               />
               <Input
                 label="Description (Optional)"
@@ -136,65 +143,75 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 multiline
                 numberOfLines={4}
                 style={styles.textArea}
+                leftIcon={<Text style={{ fontSize: 18 }}>📄</Text>}
               />
-              <DateTimePicker
-                label="Reminder Time (Optional)"
-                value={reminderTime}
-                onChange={setReminderTime}
-                mode="datetime"
-                disabled={isPast}
-                minimumDate={new Date()}
-              />
+              <View style={styles.datePickerContainer}>
+                <DateTimePicker
+                  label="Reminder Time (Optional)"
+                  value={reminderTime}
+                  onChange={setReminderTime}
+                  mode="datetime"
+                  disabled={isPast}
+                  minimumDate={new Date()}
+                />
+              </View>
 
               <View style={styles.buttons}>
                 <Button
                   title="Cancel"
                   onPress={() => navigation.goBack()}
-                  variant="secondary"
+                  variant="outline"
                   style={styles.button}
                 />
                 <Button
-                  title="Update"
+                  title="Update Task"
                   onPress={handleUpdateTask}
                   loading={loading}
                   style={styles.button}
+                  gradientColors={['#4c669f', '#3b5998', '#192f6a']}
                 />
               </View>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </ThemedStatusBar>
   );
 };
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-  },
-  content: {
-    flex: 1,
     padding: 24,
   },
+  header: {
+    marginBottom: 32,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 24,
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   form: {
     flex: 1,
   },
   textArea: {
-    height: 100,
+    height: 120,
     textAlignVertical: 'top',
+  },
+  datePickerContainer: {
+    marginBottom: 24,
   },
   buttons: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
+    gap: 16,
+    marginTop: 8,
   },
   button: {
     flex: 1,
