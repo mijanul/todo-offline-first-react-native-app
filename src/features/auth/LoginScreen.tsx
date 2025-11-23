@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -155,13 +156,16 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               >
                 Don't have an account?
               </Text>
-              <Button
-                title="Create Account"
-                onPress={() => navigation.navigate('SignUp')}
-                variant="text"
-                fullWidth
-                textColor="#FFFFFF"
-              />
+              <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                <Text
+                  style={[
+                    styles.footerText,
+                    { color: '#FFFFFF', fontWeight: 'bold' },
+                  ]}
+                >
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -205,8 +209,10 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
+    gap: 8,
   },
   footerText: {
     fontSize: 14,
