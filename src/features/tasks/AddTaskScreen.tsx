@@ -146,7 +146,7 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
                 <Button
                   title="Cancel"
                   onPress={() => navigation.goBack()}
-                  variant="outline"
+                  variant="secondary"
                   style={styles.button}
                 />
                 <Button
@@ -155,6 +155,7 @@ export const AddTaskScreen: React.FC<Props> = ({ navigation }) => {
                   loading={loading}
                   style={styles.button}
                   gradientColors={['#4c669f', '#3b5998', '#192f6a']}
+                  variant="primary"
                 />
               </View>
             </View>
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
   },
   buttons: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12, // Match TaskDetailScreen
     marginTop: 8,
   },
   button: {
