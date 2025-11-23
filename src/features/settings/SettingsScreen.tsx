@@ -48,7 +48,7 @@ export const SettingsScreen: React.FC = () => {
             try {
               await firebaseService.signOut();
               dispatch(clearAuth());
-            } catch (error: any) {
+            } catch {
               Alert.alert('Error', 'Failed to logout. Please try again.');
             } finally {
               setIsLoggingOut(false);
@@ -201,7 +201,7 @@ const AnimatedSwitch: React.FC<{
   onValueChange: () => void;
   activeColor: string;
 }> = ({ value, onValueChange, activeColor }) => {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const translateX = useRef(new Animated.Value(value ? 22 : 2)).current;
   const backgroundColor = useRef(new Animated.Value(value ? 1 : 0)).current;
 
@@ -219,7 +219,7 @@ const AnimatedSwitch: React.FC<{
         useNativeDriver: false,
       }),
     ]).start();
-  }, [value]);
+  }, [backgroundColor, translateX, value]);
 
   const bgColor = backgroundColor.interpolate({
     inputRange: [0, 1],

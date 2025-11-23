@@ -207,9 +207,6 @@ export const SignUpScreen: React.FC<Props> = ({ navigation }) => {
                   loading={loading}
                   fullWidth
                   gradientColors={['#4c669f', '#3b5998', '#192f6a']}
-                  disabled={
-                    !email || !password || !confirmPassword || !isConnected
-                  }
                 />
               </View>
             </View>
