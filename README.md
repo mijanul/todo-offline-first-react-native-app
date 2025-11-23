@@ -8,11 +8,17 @@ An offline-first React Native todo application with Firebase backend integration
 
 ## 📱 App Preview
 
-### Demo Video
+### Demo Videos
 
-![Demo 1](screenshots/screencasts/Screen_Recording_20251124_013804_todo.mp4)
+> **Note**: Demo videos are available in the `screenshots/screencasts/` directory. To view them:
+>
+> - Clone the repository and open the video files locally
+> - Or upload them to YouTube/Google Drive and update the links below
 
-![Demo 2](screenshots/screencasts/Screen_Recording_20251124_013915_todo.mp4)
+**Available Demo Videos:**
+
+- [Screen Recording 1](screenshots/screencasts/Screen_Recording_20251124_013804_todo.mp4) - View locally
+- [Screen Recording 2](screenshots/screencasts/Screen_Recording_20251124_013915_todo.mp4) - View locally
 
 ### Screenshots
 
