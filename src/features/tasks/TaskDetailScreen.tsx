@@ -158,7 +158,7 @@ export const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.buttons}>
             <Button
               title="Edit"
-              onPress={() => navigation.navigate('EditTask', { taskId })}
+              onPress={() => navigation.navigate('TaskForm', { taskId })}
               variant="secondary"
               style={styles.button}
             />

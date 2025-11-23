@@ -14,7 +14,6 @@ import {
   RefreshControl,
   Platform,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import ThemedStatusBar from '../../components/ThemedStatusBar';
@@ -22,7 +21,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import type { RootState } from '../../store';
 import { useSyncStatus } from '../../hooks/useSyncStatus';
 import { TaskItem } from '../../components/molecules/TaskItem';
-import { Button } from '../../components/atoms/Button';
+
 import {
   setTasks,
   toggleTaskComplete,
@@ -36,7 +35,6 @@ import type { AppStackParamList } from '../../types';
 import LinearGradient from 'react-native-linear-gradient';
 
 const ITEM_HEIGHT = 100;
-const { width } = Dimensions.get('window');
 
 export const TaskListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<AppStackParamList>>();
@@ -44,7 +42,7 @@ export const TaskListScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { tasks, filter } = useAppSelector((state: RootState) => state.tasks);
   const { user } = useAppSelector((state: RootState) => state.auth);
-  const { status, lastSyncedAt } = useSyncStatus();
+  const { status } = useSyncStatus();
   const [refreshing, setRefreshing] = useState(false);
   const [showSyncBadge, setShowSyncBadge] = useState(false);
   const fabScale = useRef(new Animated.Value(1)).current;
@@ -56,7 +54,7 @@ export const TaskListScreen: React.FC = () => {
       duration: 400,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [headerOpacity]);
 
   // Auto-hide sync badge after showing "Synced" for 2 seconds
   useEffect(() => {
@@ -308,7 +306,7 @@ export const TaskListScreen: React.FC = () => {
           style={[styles.fabContainer, { transform: [{ scale: fabScale }] }]}
         >
           <TouchableOpacity
-            onPress={() => navigation.navigate('AddTask')}
+            onPress={() => navigation.navigate('TaskForm')}
             onPressIn={handleFabPressIn}
             onPressOut={handleFabPressOut}
             activeOpacity={1}

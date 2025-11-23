@@ -61,7 +61,6 @@ export type TabParamList = {
 export type AppStackParamList = {
   Tabs: undefined;
   TaskDetail: { taskId: string };
-  AddTask: undefined;
-  EditTask: { taskId: string };
+  TaskForm: { taskId?: string } | undefined;
   NotificationTest: undefined;
 };

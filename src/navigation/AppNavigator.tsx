@@ -3,8 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../types';
 import { TabNavigator } from './TabNavigator';
 import { TaskDetailScreen } from '../features/tasks/TaskDetailScreen';
-import { AddTaskScreen } from '../features/tasks/AddTaskScreen';
-import { EditTaskScreen } from '../features/tasks/EditTaskScreen';
+import { TaskFormScreen } from '../features/tasks/TaskFormScreen';
 import { NotificationTestScreen } from '../screens/NotificationTestScreen';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -43,22 +42,16 @@ export const AppNavigator: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name="AddTask"
-        component={AddTaskScreen}
-        options={{
+        name="TaskForm"
+        component={TaskFormScreen}
+        options={({ route }) => ({
           headerShown: true,
-          title: 'Add Task',
+          title:
+            route?.params && (route.params as any).taskId
+              ? 'Edit Task'
+              : 'Add Task',
           presentation: 'modal',
-        }}
-      />
-      <Stack.Screen
-        name="EditTask"
-        component={EditTaskScreen}
-        options={{
-          headerShown: true,
-          title: 'Edit Task',
-          presentation: 'modal',
-        }}
+        })}
       />
       <Stack.Screen
         name="NotificationTest"
