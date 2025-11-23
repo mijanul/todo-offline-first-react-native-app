@@ -2,6 +2,12 @@ import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { realmService } from '../database/realmService';
 import { firebaseService } from '../firebase/firebaseService';
 import { Task } from '../../types';
+import { store } from '../../store';
+import {
+  setSyncStatus,
+  setLastSyncedAt,
+  setSyncError,
+} from '../../store/slices/syncSlice';
 
 class SyncService {
   private isConnected: boolean = false;
@@ -90,6 +96,8 @@ class SyncService {
 
     try {
       this.isSyncing = true;
+      store.dispatch(setSyncStatus('syncing'));
+
       const unsyncedTasks = await realmService.getUnsyncedTasks(user.uid);
       const deletedTasks = await realmService.getDeletedTasks(user.uid);
 
@@ -116,16 +124,44 @@ class SyncService {
       if (unsyncedTasks.length > 0 || deletedTasks.length > 0) {
         console.log('🎉 All tasks synced successfully!');
       }
+
+      store.dispatch(setSyncStatus('succeeded'));
+      store.dispatch(setLastSyncedAt(Date.now()));
     } catch (error) {
       console.error('❌ Error syncing local to remote:', error);
+      store.dispatch(setSyncStatus('failed'));
+      store.dispatch(
+        setSyncError(error instanceof Error ? error.message : 'Unknown error'),
+      );
     } finally {
       this.isSyncing = false;
+      // Reset status to idle after a delay if successful
+      if (store.getState().sync.status === 'succeeded') {
+        setTimeout(() => {
+          store.dispatch(setSyncStatus('idle'));
+        }, 3000);
+      }
     }
   }
 
   private async handleRemoteTasksUpdate(remoteTasks: Task[]) {
-    for (const remoteTask of remoteTasks) {
-      await realmService.saveRemoteTask(remoteTask);
+    try {
+      store.dispatch(setSyncStatus('syncing'));
+      for (const remoteTask of remoteTasks) {
+        await realmService.saveRemoteTask(remoteTask);
+      }
+      store.dispatch(setSyncStatus('succeeded'));
+      store.dispatch(setLastSyncedAt(Date.now()));
+
+      setTimeout(() => {
+        store.dispatch(setSyncStatus('idle'));
+      }, 3000);
+    } catch (error) {
+      console.error('Error handling remote updates:', error);
+      store.dispatch(setSyncStatus('failed'));
+      store.dispatch(
+        setSyncError(error instanceof Error ? error.message : 'Unknown error'),
+      );
     }
   }
 

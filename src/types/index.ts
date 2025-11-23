@@ -52,8 +52,13 @@ export type AuthStackParamList = {
   SignUp: undefined;
 };
 
+export type TabParamList = {
+  Tasks: undefined;
+  Settings: undefined;
+};
+
 export type AppStackParamList = {
-  TaskList: undefined;
+  Tabs: undefined;
   TaskDetail: { taskId: string };
   AddTask: undefined;
   EditTask: { taskId: string };

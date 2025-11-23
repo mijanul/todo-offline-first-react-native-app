@@ -105,11 +105,14 @@ export const EditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <ThemedStatusBar>
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { backgroundColor: theme.colors.background },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>

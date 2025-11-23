@@ -1,5 +1,6 @@
 import React from 'react';
-import { StatusBar, SafeAreaView, StyleSheet } from 'react-native';
+import { StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 
 interface ThemedStatusBarProps {
@@ -11,15 +12,22 @@ const ThemedStatusBar: React.FC<ThemedStatusBarProps> = ({ children }) => {
 
   if (children) {
     return (
-      <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
-      >
+      <>
         <StatusBar
           barStyle={isDark ? 'light-content' : 'dark-content'}
           backgroundColor={theme.colors.background}
+          translucent={false}
         />
-        {children}
-      </SafeAreaView>
+        <SafeAreaView
+          style={[
+            styles.safeArea,
+            { backgroundColor: theme.colors.background },
+          ]}
+          edges={['top', 'left', 'right']}
+        >
+          {children}
+        </SafeAreaView>
+      </>
     );
   }
 
@@ -27,6 +35,7 @@ const ThemedStatusBar: React.FC<ThemedStatusBarProps> = ({ children }) => {
     <StatusBar
       barStyle={isDark ? 'light-content' : 'dark-content'}
       backgroundColor={theme.colors.background}
+      translucent={false}
     />
   );
 };
