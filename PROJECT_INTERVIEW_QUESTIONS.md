@@ -62,12 +62,61 @@ Central type definitions for Task, User, navigation params, and state shapes. En
 ### Q9. Why separate services into database/, firebase/, sync/, and notifications/?
 
 **💡 Answer:**  
+
+```typescript
+// src/services/database/realmService.ts
+class RealmService {
+  private realm: Realm | null = null;
+  async getAllTasks(userId: string): Promise<Task[]> { /* ... */ }
+}
+
+// src/services/firebase/firebaseService.ts  
+class FirebaseService {
+  async signIn(email: string, password: string) { /* ... */ }
+}
+
+// src/services/sync/syncService.ts
+class SyncService {
+  async syncLocalToRemote() { /* ... */ }
+}
+
+// src/services/notifications/notificationService.ts
+class NotificationService {
+  async scheduleTaskReminder(taskId: string, title: string, timestamp: number) { /* ... */ }
+}
+```
+
+**🔍 Explanation:**  
+Makes code easier to test, debug, and modify. Changes to Firebase don't affect Realm logic.
 Each service has distinct responsibility: database (local storage), firebase (remote), sync (coordination), notifications (push). Follows single responsibility principle.
 
 <a name="q10"></a>
 ### Q10. Explain the custom hooks pattern (useSyncStatus, useNetworkStatus).
 
 **💡 Answer:**  
+
+```typescript
+// src/hooks/useSyncStatus.ts
+export const useSyncStatus = () => {
+  const { status, lastSyncedAt, error } = useSelector(
+    (state: RootState) => state.sync
+  );
+  return {
+    isSyncing: status === 'syncing',
+    isSynced: status === 'succeeded',
+    isError: status === 'failed',
+  };
+};
+
+// Usage in component
+const { isSyncing, isSynced } = useSyncStatus();
+if (isSyncing) {
+  return <ActivityIndicator />;
+}
+```
+
+**🔍 Explanation:**  
+Reusable, testable, and hides complexity. Multiple components can use same logic.
 Encapsulates Redux selectors and derived state logic. Components get clean API without knowing Redux internals.
 
 
@@ -79,60 +128,264 @@ Encapsulates Redux selectors and derived state logic. Components get clean API w
 ### Q11. How does the offline-first architecture work?
 
 **💡 Answer:**  
+
+```typescript
+// Create task - writes to Realm immediately
+const task = await realmService.createTask({
+  userId: user.uid,
+  title: 'Buy groceries',
+  completed: false
+});
+
+// Sync to Firebase when online
+if (isConnected) {
+  await syncService.syncLocalToRemote();
+}
+
+// Always read from Realm (works offline)
+const tasks = await realmService.getAllTasks(user.uid);
+```
+
+**🔍 Explanation:**  
+Users can work offline. Changes queue locally and sync when connection returns.
 All CRUD operations write to Realm first (local), then sync to Firestore when online. App always reads from Realm.
 
 <a name="q12"></a>
 ### Q12. Explain the bidirectional sync strategy.
 
 **💡 Answer:**  
+
+```typescript
+// Local to remote (syncService.ts)
+const unsyncedTasks = await realmService.getUnsyncedTasks(userId);
+for (const task of unsyncedTasks) {
+  await firebaseService.syncTaskToFirestore(task);
+  await realmService.markTaskAsSynced(task.id);
+}
+
+// Remote to local (syncService.ts)
+firebaseService.listenToTasks(
+  tasks => {
+    tasks.forEach(task => realmService.saveRemoteTask(task));
+  },
+  error => console.error('Sync error:', error)
+);
+```
+
+**🔍 Explanation:**  
+Ensures consistency across devices. Changes from any device propagate to all others.
 Local-to-remote syncs unsynced tasks to Firestore. Remote-to-local listens to Firestore changes and updates Realm.
 
 <a name="q13"></a>
 ### Q13. How are sync conflicts handled?
 
 **💡 Answer:**  
+
+```typescript
+// realmService.ts - saveRemoteTask
+async saveRemoteTask(task: Task): Promise<void> {
+  const existingTask = this.realm.objects('Task')
+    .filtered('id == $0', task.id)[0];
+  
+  this.realm.write(() => {
+    if (existingTask) {
+      // Remote overwrites local
+      existingTask.title = task.title;
+      existingTask.updatedAt = task.updatedAt;
+      existingTask.synced = true;
+    } else {
+      this.realm.create('Task', { ...task, synced: true });
+    }
+  });
+}
+```
+
+**🔍 Explanation:**  
+Simple but can lose data. Trade-off for implementation simplicity. Could enhance with CRDTs.
 Last-write-wins based on `updatedAt` timestamp. Remote changes always overwrite local if remote is newer.
 
 <a name="q14"></a>
 ### Q14. Why mark tasks as `synced: false` on local changes?
 
 **💡 Answer:**  
+
+```typescript
+// realmService.ts - updateTask
+async updateTask(id: string, userId: string, updates: Partial<Task>) {
+  this.realm.write(() => {
+    Object.assign(task, {
+      ...updates,
+      updatedAt: Date.now(),
+      synced: false  // Mark for sync
+    });
+  });
+}
+
+// syncService.ts - syncLocalToRemote
+const unsyncedTasks = await realmService.getUnsyncedTasks(user.uid);
+for (const task of unsyncedTasks) {
+  await firebaseService.syncTaskToFirestore(task);
+}
+```
+
+**🔍 Explanation:**  
+Efficient sync - only uploads changed tasks, not entire database.
 Tracks which tasks need uploading to Firestore. Sync service queries unsynced tasks to upload.
 
 <a name="q15"></a>
 ### Q15. Explain soft delete vs hard delete implementation.
 
 **💡 Answer:**  
+
+```typescript
+// Soft delete - syncs to Firebase
+async deleteTask(id: string, userId: string) {
+  this.realm.write(() => {
+    task.isDeleted = true;
+    task.synced = false;  // Will sync deletion
+    task.updatedAt = Date.now();
+  });
+}
+
+// Hard delete - after sync completes
+async permanentlyDeleteTask(id: string, userId: string) {
+  this.realm.write(() => {
+    this.realm.delete(task);
+  });
+}
+```
+
+**🔍 Explanation:**  
+Soft delete ensures deletions sync to Firestore before permanent removal.
 Soft delete marks `isDeleted: true`, hard delete removes from database. Soft delete allows sync of deletions.
 
 <a name="q16"></a>
 ### Q16. How does the filter state work in TaskListScreen?
 
 **💡 Answer:**  
+
+```typescript
+// TaskListScreen.tsx
+const { tasks, filter } = useAppSelector(state => state.tasks);
+
+const filteredTasks = useMemo(() => {
+  return tasks.filter(task => {
+    if (filter === 'active') return !task.completed;
+    if (filter === 'completed') return task.completed;
+    return true;
+  });
+}, [tasks, filter]);
+```
+
+**🔍 Explanation:**  
+Memoization prevents re-filtering on every render. Only recalculates when tasks or filter change.
 Redux stores filter ('all'|'active'|'completed'), useMemo filters tasks client-side for performance.
 
 <a name="q17"></a>
 ### Q17. Why use Redux Toolkit instead of plain Redux?
 
 **💡 Answer:**  
+
+```typescript
+// tasksSlice.ts
+const tasksSlice = createSlice({
+  name: 'tasks',
+  initialState,
+  reducers: {
+    setTasks: (state, action) => {
+      state.tasks = action.payload;  // Immer makes this safe
+    },
+    toggleTaskComplete: (state, action) => {
+      const task = state.tasks.find(t => t.id === action.payload);
+      if (task) {
+        task.completed = !task.completed;  // Direct mutation works!
+      }
+    }
+  }
+});
+```
+
+**🔍 Explanation:**  
+Less code, fewer bugs, better DX. Immer handles immutability automatically.
 RTK provides `createSlice` (reduces boilerplate), Immer (immutable updates), and configured store with DevTools.
 
 <a name="q18"></a>
 ### Q18. Explain the serializableCheck middleware configuration.
 
 **💡 Answer:**  
+
+```typescript
+// store/index.ts
+export const store = configureStore({
+  reducer: { auth: authReducer, tasks: tasksReducer },
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredPaths: ['auth.user'],
+        ignoredActions: ['auth/setUser'],
+      },
+    }),
+});
+```
+
+**🔍 Explanation:**  
+Prevents console warnings while storing Firebase User. Trade-off: can't time-travel debug user object.
 Redux requires serializable state, but Firebase User objects aren't serializable. Config ignores specific paths.
 
 <a name="q19"></a>
 ### Q19. How does Realm change listener trigger UI updates?
 
 **💡 Answer:**  
+
+```typescript
+// syncService.ts - initialize
+this.unsubscribeRealm = await realmService.addChangeListener(() => {
+  if (this.isConnected) {
+    this.syncLocalToRemote();
+  }
+});
+
+// realmService.ts - addChangeListener
+async addChangeListener(callback: () => void) {
+  const tasks = this.realm.objects('Task');
+  const listener = () => callback();
+  tasks.addListener(listener);
+  return () => tasks.removeListener(listener);
+}
+```
+
+**🔍 Explanation:**  
+Reactive data flow: Realm change → sync → Redux update → UI re-render.
 Realm listener calls callback on data changes, which loads tasks from Realm and dispatches to Redux, triggering re-render.
 
 <a name="q20"></a>
 ### Q20. Why separate network state into its own Redux slice?
 
 **💡 Answer:**  
+
+```typescript
+// networkSlice.ts
+interface NetworkState {
+  isConnected: boolean;
+  type: string | null;
+  isInternetReachable: boolean | null;
+}
+
+// NetworkProvider.tsx
+NetInfo.addEventListener(state => {
+  dispatch(setNetworkState({
+    isConnected: state.isConnected ?? false,
+    type: state.type,
+    isInternetReachable: state.isInternetReachable ?? null
+  }));
+});
+
+// Usage in components
+const { isConnected } = useAppSelector(state => state.network);
+```
+
+**🔍 Explanation:**  
+Single source of truth. Components react to network changes without managing listeners.
 Network status affects multiple features (sync, offline banner). Centralized state prevents duplicate listeners.
 
 
