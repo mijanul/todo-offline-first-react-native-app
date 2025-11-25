@@ -1,10 +1,14 @@
-# Todo App
+# Todo App - Offline-First React Native
 
-An offline-first React Native todo application with Firebase backend integration, supporting both iOS and Android platforms.
+> A production-ready task management app built with React Native, featuring offline-first architecture, Firebase sync, and push notifications.
 
-## 📥 Download
+## 📥 Download Latest Release APK
 
-**[Download Latest Release APK](https://drive.google.com/file/d/1jQbIAFiH-UFifS_B9ZWETs0YcWz8XFFS/view?usp=sharing)** - Install directly on your Android device
+[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/yourusername/todo/releases/latest/download/app-release.apk)
+
+## 📚 Interview Preparation
+
+**[📱 130 Project-Specific Interview Questions](./PROJECT_INTERVIEW_QUESTIONS.md)** - Complete technical interview prep covering architecture, state management, offline-first design, Firebase integration, performance optimization, and more. Each question includes detailed answers, real code examples, and explanations.
 
 ## 📱 App Preview
 
