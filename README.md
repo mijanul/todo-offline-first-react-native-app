@@ -4,7 +4,7 @@
 
 ## 📥 Download Latest Release APK
 
-[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen?style=for-the-badge&logo=android)](https://drive.google.com/file/d/1jQbIAFiH-UFifS_B9ZWETs0YcWz8XFFS/view?usp=sharing)
+[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/mijanul/todo-offline-first-react-native-app/releases/download/v1.0.0/app-release.apk)
 
 ## 📚 Interview Preparation
 
